@@ -1,0 +1,7 @@
+{
+  "name": "Midas AI",
+  "description": "Um gerenciador financeiro inteligente e minimalista que utiliza IA para categorizar gastos e ganhos via texto ou voz.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
