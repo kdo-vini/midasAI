@@ -10,7 +10,7 @@ export interface Transaction {
   category: string;
   type: TransactionType;
   date: string; // ISO string
-  isRecurring?: boolean; 
+  isRecurring?: boolean;
   recurringId?: string; // Links back to the rule
 }
 
@@ -48,5 +48,6 @@ export interface AIParsedTransaction {
   description?: string;
   category?: string;
   type?: 'INCOME' | 'EXPENSE';
-  date?: string; 
+  date?: string;
+  message?: string; // AI response for questions or confirmation
 }

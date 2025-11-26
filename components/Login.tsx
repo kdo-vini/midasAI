@@ -1,0 +1,103 @@
+import React, { useState } from 'react';
+import { supabase } from '../services/supabase';
+import { Loader2, Mail, Lock, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
+
+export const Login: React.FC = () => {
+    const [loading, setLoading] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isSignUp, setIsSignUp] = useState(false);
+
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            if (isSignUp) {
+                const { error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                });
+                if (error) throw error;
+                toast.success('Verifique seu email para confirmar o cadastro!');
+            } else {
+                const { error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+                if (error) throw error;
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Erro ao autenticar');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4 transition-colors duration-300">
+            <div className="bg-white dark:bg-slate-800 w-full max-w-md p-8 rounded-2xl shadow-xl border border-indigo-50 dark:border-slate-700 transition-colors duration-300">
+                <div className="flex flex-col items-center mb-8">
+                    <div className="bg-indigo-600 dark:bg-indigo-500 p-3 rounded-xl mb-4 shadow-lg shadow-indigo-200 dark:shadow-none">
+                        <Sparkles className="w-8 h-8 text-white" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Midas AI</h1>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Seu assistente financeiro inteligente</p>
+                </div>
+
+                <form onSubmit={handleLogin} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+                        <div className="relative">
+                            <Mail className="w-5 h-5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all placeholder-slate-400 dark:placeholder-slate-500"
+                                placeholder="seu@email.com"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Senha</label>
+                        <div className="relative">
+                            <Lock className="w-5 h-5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all placeholder-slate-400 dark:placeholder-slate-500"
+                                placeholder="••••••••"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-indigo-200 dark:shadow-none flex items-center justify-center"
+                    >
+                        {loading ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                            isSignUp ? 'Criar Conta' : 'Entrar'
+                        )}
+                    </button>
+                </form>
+
+                <div className="mt-6 text-center">
+                    <button
+                        onClick={() => setIsSignUp(!isSignUp)}
+                        className="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium hover:underline"
+                    >
+                        {isSignUp ? 'Já tem uma conta? Entre aqui' : 'Não tem conta? Crie uma agora'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
