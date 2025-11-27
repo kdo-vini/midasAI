@@ -36,12 +36,12 @@ export const TransactionList: React.FC<TransactionListProps> = ({ transactions, 
       <div className="space-y-3">
         {sorted.map((t) => (
           <div key={t.id} className="group bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between hover:border-indigo-100 dark:hover:border-slate-600 transition-all">
-            <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-full ${t.type === TransactionType.INCOME ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'}`}>
+            <div className="flex items-center gap-4 min-w-0 flex-1">
+              <div className={`p-3 rounded-full flex-shrink-0 ${t.type === TransactionType.INCOME ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'}`}>
                 {t.type === TransactionType.INCOME ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownLeft className="w-5 h-5" />}
               </div>
-              <div>
-                <p className="font-medium text-slate-800 dark:text-slate-100">{t.description}</p>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-slate-800 dark:text-slate-100 truncate">{t.description}</p>
                 <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1">
                   <select
                     value={t.category}
@@ -61,7 +61,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ transactions, 
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-shrink-0 ml-4">
               <span className={`font-bold ${t.type === TransactionType.INCOME ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                 {t.type === TransactionType.INCOME ? '+' : '-'}{formatCurrency(t.amount)}
               </span>

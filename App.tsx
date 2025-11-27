@@ -6,6 +6,7 @@ import { TransactionList } from './components/TransactionList';
 import { FixedIncomeModal } from './components/FixedIncomeModal';
 import { Login } from './components/Login';
 import { InsightsComponent } from './components/InsightsComponent';
+import { BottomNav } from './components/BottomNav';
 import { Transaction, TransactionType, AIParsedTransaction, RecurringTransaction, CategoryStat, BudgetGoal } from './types';
 import { Settings, BarChart3, ChevronLeft, ChevronRight, LogOut, Loader2, Moon, Sun } from 'lucide-react';
 import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget } from './services/supabase';
@@ -23,6 +24,7 @@ const App: React.FC = () => {
   const [budgetGoals, setBudgetGoals] = useState<BudgetGoal[]>([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [activeTab, setActiveTab] = useState<'home' | 'reports'>('home');
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') === 'dark' ||
@@ -84,7 +86,7 @@ const App: React.FC = () => {
     }
   };
 
-  // --- Auto-Process Recurring (Client-side logic for now, but saving to DB) ---
+  // --- Auto-Process Recurring ---
   useEffect(() => {
     if (!session?.user || recurringItems.length === 0) return;
 
@@ -109,7 +111,7 @@ const App: React.FC = () => {
           targetDate.setDate(safeDay);
 
           newTransactions.push({
-            id: crypto.randomUUID(), // Temp ID, DB will generate real one but we need it for UI immediately
+            id: crypto.randomUUID(),
             amount: item.amount,
             description: item.name,
             category: item.category,
@@ -123,9 +125,7 @@ const App: React.FC = () => {
       });
 
       if (hasChanges) {
-        // Optimistic update
         setTransactions(prev => [...newTransactions, ...prev]);
-        // Save to DB
         for (const tx of newTransactions) {
           await saveTransaction(tx, session.user.id);
         }
@@ -153,27 +153,55 @@ const App: React.FC = () => {
   }, [transactions, currentDate]);
 
   const handleAITransaction = async (data: AIParsedTransaction) => {
+    console.log("AI Data Received:", data); // Debug log
     if (!data.amount || !data.category || !data.type || !session?.user) return;
 
-    let finalDate = data.date ? data.date : new Date().toISOString();
+    // DEBUG TOAST
+    toast.info(`Debug: Parcelas detectadas: ${data.installments} (Raw: ${JSON.stringify(data.installments)})`);
 
-    const newTx: Transaction = {
-      id: crypto.randomUUID(),
-      amount: data.amount,
-      description: data.description || 'Transação',
-      category: data.category,
-      type: data.type === 'INCOME' ? TransactionType.INCOME : TransactionType.EXPENSE,
-      date: finalDate,
-    };
+    const transactionsToSave: Transaction[] = [];
+    const baseDate = data.date ? new Date(data.date) : new Date();
+
+    // Robust parsing for installments
+    let installments = 1;
+    if (data.installments) {
+      const parsed = parseInt(String(data.installments), 10);
+      if (!isNaN(parsed) && parsed > 1) {
+        installments = parsed;
+      }
+    }
+
+    const installmentAmount = data.amount / installments;
+
+    for (let i = 0; i < installments; i++) {
+      const date = new Date(baseDate);
+      date.setMonth(baseDate.getMonth() + i);
+
+      const description = installments > 1
+        ? `${data.description || 'Transação'} (${i + 1}/${installments})`
+        : data.description || 'Transação';
+
+      transactionsToSave.push({
+        id: crypto.randomUUID(),
+        amount: installmentAmount,
+        description: description,
+        category: data.category,
+        type: data.type === 'INCOME' ? TransactionType.INCOME : TransactionType.EXPENSE,
+        date: date.toISOString(),
+      });
+    }
 
     // Optimistic Update
-    setTransactions(prev => [newTx, ...prev]);
-    toast.success("Transação adicionada!");
+    setTransactions(prev => [...transactionsToSave, ...prev]);
+    toast.success(installments > 1 ? `${installments} parcelas adicionadas!` : "Transação adicionada!");
 
     try {
-      await saveTransaction(newTx, session.user.id);
+      // Save all transactions
+      for (const tx of transactionsToSave) {
+        await saveTransaction(tx, session.user.id);
+      }
 
-      // Auto-add budget goal if missing
+      // Auto-add budget goal if missing (only once)
       if (data.type === 'EXPENSE' && !budgetGoals.some(b => b.category === data.category)) {
         const newBudget = { category: data.category!, targetPercentage: 0 };
         setBudgetGoals(prev => [...prev, newBudget]);
@@ -182,13 +210,12 @@ const App: React.FC = () => {
     } catch (error) {
       console.error("Error saving transaction:", error);
       toast.error("Erro ao salvar transação. Verifique sua conexão.");
-      // Rollback optimistic update if needed (omitted for brevity)
     }
   };
 
   const handleDelete = async (id: string) => {
     setTransactions(prev => prev.filter(t => t.id !== id));
-    toast.success("Transação removida.");
+    toast.success("Transação removida.", { duration: 1000 });
     try {
       await deleteTransaction(id);
     } catch (error) {
@@ -308,7 +335,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 pb-20 font-sans transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 pb-24 md:pb-20 font-sans">
       <Toaster position="top-center" richColors theme={darkMode ? 'dark' : 'light'} />
       <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40 shadow-sm/50 backdrop-blur-md bg-white/90 dark:bg-slate-800/90 transition-colors duration-300">
         <div className="max-w-4xl mx-auto px-4 py-3">
@@ -359,38 +386,41 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-6">
+      <main className="max-w-3xl mx-auto px-4 py-6 space-y-8">
 
-        <div className="mb-8">
+        {/* Home Tab Content */}
+        <div className={`${activeTab === 'home' ? 'block' : 'hidden'} md:block space-y-8 animate-in fade-in duration-300`}>
           <SmartInput
             onTransactionParsed={handleAITransaction}
             categories={DEFAULT_CATEGORIES}
           />
+
+          <SummaryCards stats={stats} />
+
+          <div>
+            {isLoadingData ? (
+              <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
+            ) : (
+              <TransactionList
+                transactions={currentMonthTransactions}
+                onDelete={handleDelete}
+                onCategoryChange={handleCategoryChange}
+              />
+            )}
+          </div>
         </div>
 
-        <InsightsComponent transactions={transactions} budgetGoals={budgetGoals} />
+        {/* Reports Tab Content */}
+        <div className={`${activeTab === 'reports' ? 'block' : 'hidden'} md:block space-y-8 animate-in fade-in duration-300`}>
+          <InsightsComponent transactions={transactions} budgetGoals={budgetGoals} />
 
-        <SummaryCards stats={stats} />
-
-        <div className="mb-10">
-          {isLoadingData ? (
-            <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
-          ) : (
-            <TransactionList
-              transactions={currentMonthTransactions}
-              onDelete={handleDelete}
-              onCategoryChange={handleCategoryChange}
-            />
-          )}
+          <StatsCards
+            stats={stats}
+            categoryStats={categoryStats}
+            budgetGoals={budgetGoals}
+            onUpdateBudget={handleUpdateBudget}
+          />
         </div>
-
-        <StatsCards
-          stats={stats}
-          categoryStats={categoryStats}
-          budgetGoals={budgetGoals}
-          onUpdateBudget={handleUpdateBudget}
-        />
-
       </main>
 
       <FixedIncomeModal
@@ -400,6 +430,8 @@ const App: React.FC = () => {
         onSave={handleAddRecurring}
         onRemove={handleRemoveRecurring}
       />
+
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 };
