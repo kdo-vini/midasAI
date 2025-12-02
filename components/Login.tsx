@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { supabase } from '../services/supabase';
 import { Loader2, Mail, Lock, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import { PrivacyPolicyModal } from './PrivacyPolicyModal';
 
 export const Login: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isSignUp, setIsSignUp] = useState(false);
+    const [showPrivacy, setShowPrivacy] = useState(false);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -89,6 +91,19 @@ export const Login: React.FC = () => {
                     </button>
                 </form>
 
+                {isSignUp && (
+                    <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
+                        Ao criar sua conta, você concorda com nossa{' '}
+                        <button
+                            type="button"
+                            onClick={() => setShowPrivacy(true)}
+                            className="text-indigo-600 hover:underline dark:text-indigo-400 font-medium focus:outline-none"
+                        >
+                            Política de Privacidade
+                        </button>
+                    </p>
+                )}
+
                 <div className="mt-6 text-center">
                     <button
                         onClick={() => setIsSignUp(!isSignUp)}
@@ -98,6 +113,11 @@ export const Login: React.FC = () => {
                     </button>
                 </div>
             </div>
+
+            <PrivacyPolicyModal
+                isOpen={showPrivacy}
+                onClose={() => setShowPrivacy(false)}
+            />
         </div>
     );
 };
