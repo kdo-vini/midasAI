@@ -54,40 +54,32 @@ The application features:
 - Budget goal recommendations
 
 ### 3. **Transaction Management**
-- View all transactions by month
-- **Payment Status Tracking**: Mark transactions as paid/unpaid with visual feedback
-- **Three-Category System**: Organize as Income, Fixed Expenses, or Variable Expenses
-- **Color-coded Cards**: Pastel green for paid, pastel red for unpaid
-- Filter transactions by category (Income/Fixed/Variable)
-- Edit transaction categories
-- Delete transactions
-- Installment payment tracking
+- **Three-Category System**: Organize finances into **Income**, **Fixed Expenses**, and **Variable Expenses**.
+- **Smart Payment Tracking**:
+  - **Fixed Expenses**: Track paid/unpaid status with visual indicators (Green/Red).
+  - **Variable Expenses & Income**: Simplified view without payment status.
+- **Cascading Deletion**: Removing a recurring item automatically cleans up associated future and past transactions.
+- **Installment Tracking**: Automatically handles installment payments (e.g., "in 10x").
 
 ### 4. **Dashboard & Analytics**
-- **Category Summary Cards**: Visual overview of Income, Fixed Expenses, and Variable Expenses
-- Track payment progress (e.g., "3/7 bills paid")
-- Percentage-based completion indicators
-- Category tabs for quick filtering
-- Real-time payment status updates
+- **Category Summary Cards**: Dedicated cards for Income, Fixed, and Variable expenses.
+- **Smart Stats**:
+  - Income: Shows total received.
+  - Fixed Expenses: Shows paid vs. pending amount.
+  - Variable Expenses: Shows total spent.
+- **Interactive Charts**: Visual progress indicators and budget comparisons.
 
 ### 5. **Recurring Transactions**
-- Set up monthly recurring income/expenses
-- Automatic transaction generation on specified days
-- Manage recurring items (add/remove)
-
-### 5. **Budget & Analytics**
-- Category-based spending analysis
-- Budget goal setting with percentage targets
-- Visual progress indicators
-- Monthly income/expense summaries
-- Balance tracking
+- Set up monthly recurring income/expenses.
+- Automatic transaction generation on specified days.
+- **Smart Cleanup**: Deleting a recurring rule offers to remove all associated history.
 
 ### 6. **User Experience**
-- Dark/Light mode toggle
-- Responsive mobile-first design
-- Bottom navigation for mobile devices
-- Toast notifications for user feedback
-- Loading states and error handling
+- **Mobile-First Design**: Optimized for touch interfaces.
+- **Swipe Gestures**: Swipe right on Fixed Expenses to mark as paid (Mobile).
+- **Desktop Navigation**: Quick access links in the header for easy navigation.
+- **Dark/Light Mode**: Seamless theme switching.
+- **Responsive Layout**: Adapts from mobile lists to desktop dashboards.
 
 ## 🛠️ Tech Stack
 
@@ -265,12 +257,15 @@ All tables use **Row Level Security (RLS)** to ensure users can only access thei
 midasAI/
 ├── components/           # React components
 │   ├── BottomNav.tsx    # Mobile bottom navigation
+│   ├── CategoryTabs.tsx # Category filter tabs (Income/Fixed/Variable)
+│   ├── DashboardStats.tsx # Top summary cards with stats
 │   ├── FixedIncomeModal.tsx  # Recurring transactions modal
 │   ├── InsightsComponent.tsx # AI-generated insights
 │   ├── Login.tsx        # Authentication component
 │   ├── SmartInput.tsx   # AI-powered input field
 │   ├── StatsCards.tsx   # Budget and analytics cards
 │   ├── SummaryCards.tsx # Income/expense summary
+│   ├── TransactionCard.tsx # Individual transaction card with swipe/checkbox
 │   └── TransactionList.tsx  # Transaction list display
 ├── constants/           # Application constants
 │   └── categories.ts    # Default category list
