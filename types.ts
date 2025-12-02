@@ -3,49 +3,7 @@ export enum TransactionType {
   EXPENSE = 'EXPENSE'
 }
 
-export interface Transaction {
-  id: string;
-  amount: number;
-  description: string;
-  category: string;
-  type: TransactionType;
-  date: string; // ISO string
-  isRecurring?: boolean;
-  recurringId?: string; // Links back to the rule
-}
-
-export interface RecurringTransaction {
-  id: string;
-  name: string;
-  amount: number;
-  category: string;
-  type: TransactionType;
-  dayOfMonth: number;
-}
-
-export interface MonthlyStats {
-  totalIncome: number;
-  totalExpense: number;
-  balance: number;
-}
-
-export interface CategoryStat {
-  category: string;
-  amount: number;
-  percentage: number;
-  type: TransactionType;
-}
-
-export interface BudgetGoal {
-  category: string;
-  targetPercentage: number;
-}
-
-// AI Response Structure
-export enum TransactionType {
-  INCOME = 'INCOME',
-  EXPENSE = 'EXPENSE'
-}
+export type TransactionCategory = 'income' | 'fixed' | 'variable';
 
 export interface Transaction {
   id: string;
@@ -56,6 +14,12 @@ export interface Transaction {
   date: string; // ISO string
   isRecurring?: boolean;
   recurringId?: string; // Links back to the rule
+
+  // Payment status fields
+  isPaid?: boolean;
+  transactionCategory?: TransactionCategory;
+  dueDate?: string; // ISO string - quando deve ser pago
+  paidDate?: string; // ISO string - quando foi marcado como pago
 }
 
 export interface RecurringTransaction {

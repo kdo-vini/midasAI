@@ -30,7 +30,11 @@ export const fetchTransactions = async (userId: string) => {
         type: t.type,
         date: t.date,
         isRecurring: t.is_recurring,
-        recurringId: t.recurring_id
+        recurringId: t.recurring_id,
+        isPaid: t.is_paid,
+        transactionCategory: t.transaction_category,
+        dueDate: t.due_date,
+        paidDate: t.paid_date
     })) as Transaction[];
 };
 
@@ -46,8 +50,34 @@ export const saveTransaction = async (transaction: Transaction, userId: string) 
             date: transaction.date,
             is_recurring: transaction.isRecurring,
             recurring_id: transaction.recurringId,
+            is_paid: transaction.isPaid ?? false,
+            transaction_category: transaction.transactionCategory,
+            due_date: transaction.dueDate,
+            paid_date: transaction.paidDate,
             user_id: userId
         }]);
+
+    if (error) throw error;
+};
+
+export const updateTransaction = async (transaction: Transaction, userId: string) => {
+    const { error } = await supabase
+        .from('transactions')
+        .update({
+            amount: transaction.amount,
+            description: transaction.description,
+            category: transaction.category,
+            type: transaction.type,
+            date: transaction.date,
+            is_recurring: transaction.isRecurring,
+            recurring_id: transaction.recurringId,
+            is_paid: transaction.isPaid ?? false,
+            transaction_category: transaction.transactionCategory,
+            due_date: transaction.dueDate,
+            paid_date: transaction.paidDate
+        })
+        .eq('id', transaction.id)
+        .eq('user_id', userId);
 
     if (error) throw error;
 };
@@ -110,6 +140,15 @@ export const deleteRecurring = async (id: string) => {
         .from('recurring_transactions')
         .delete()
         .eq('id', id);
+
+    if (error) throw error;
+};
+
+export const deleteTransactionsByRecurringId = async (recurringId: string) => {
+    const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('recurring_id', recurringId);
 
     if (error) throw error;
 };

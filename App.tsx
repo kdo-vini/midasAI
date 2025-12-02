@@ -2,14 +2,16 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { SmartInput } from './components/SmartInput';
 import { SummaryCards } from './components/SummaryCards';
 import { StatsCards } from './components/StatsCards';
-import { TransactionList } from './components/TransactionList';
+import { TransactionCard } from './components/TransactionCard';
+import { CategoryTabs } from './components/CategoryTabs';
+import { DashboardStats } from './components/DashboardStats';
 import { FixedIncomeModal } from './components/FixedIncomeModal';
 import { Login } from './components/Login';
 import { InsightsComponent } from './components/InsightsComponent';
-import { BottomNav } from './components/BottomNav';
-import { Transaction, TransactionType, AIParsedTransaction, RecurringTransaction, CategoryStat, BudgetGoal } from './types';
+import { BottomNav, TabType } from './components/BottomNav';
+import { Transaction, TransactionType, TransactionCategory, AIParsedTransaction, RecurringTransaction, CategoryStat, BudgetGoal } from './types';
 import { Settings, BarChart3, ChevronLeft, ChevronRight, LogOut, Loader2, Moon, Sun } from 'lucide-react';
-import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget } from './services/supabase';
+import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget, updateTransaction, deleteTransactionsByRecurringId } from './services/supabase';
 import { DEFAULT_CATEGORIES } from './constants/categories';
 import { Toaster, toast } from 'sonner';
 
@@ -24,7 +26,8 @@ const App: React.FC = () => {
   const [budgetGoals, setBudgetGoals] = useState<BudgetGoal[]>([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
-  const [activeTab, setActiveTab] = useState<'home' | 'reports'>('home');
+  const [activeTab, setActiveTab] = useState<TabType>('home');
+  const [activeCategory, setActiveCategory] = useState<TransactionCategory | 'all'>('all');
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') === 'dark' ||
@@ -118,7 +121,9 @@ const App: React.FC = () => {
             type: item.type,
             date: targetDate.toISOString(),
             isRecurring: true,
-            recurringId: item.id
+            recurringId: item.id,
+            isPaid: false,
+            transactionCategory: 'fixed'
           });
           hasChanges = true;
         }
@@ -152,11 +157,35 @@ const App: React.FC = () => {
     });
   }, [transactions, currentDate]);
 
+  const filteredTransactions = useMemo(() => {
+    if (activeCategory === 'all') return currentMonthTransactions;
+    return currentMonthTransactions.filter(t => {
+      const category = t.transactionCategory || (t.type === TransactionType.INCOME ? 'income' : 'variable');
+      return category === activeCategory;
+    });
+  }, [currentMonthTransactions, activeCategory]);
+
+  const categoryCounts = useMemo(() => {
+    const counts = {
+      all: currentMonthTransactions.length,
+      income: 0,
+      fixed: 0,
+      variable: 0
+    };
+
+    currentMonthTransactions.forEach(t => {
+      const category = t.transactionCategory || (t.type === TransactionType.INCOME ? 'income' : 'variable');
+      if (category === 'income') counts.income++;
+      else if (category === 'fixed') counts.fixed++;
+      else if (category === 'variable') counts.variable++;
+    });
+
+    return counts;
+  }, [currentMonthTransactions]);
+
   const handleAITransaction = async (data: AIParsedTransaction) => {
     console.log("AI Data Received:", data);
     if (!data.amount || !data.category || !data.type || !session?.user) return;
-
-    toast.info(`Debug: Parcelas detectadas: ${data.installments} (Raw: ${JSON.stringify(data.installments)})`);
 
     const transactionsToSave: Transaction[] = [];
 
@@ -193,6 +222,8 @@ const App: React.FC = () => {
         category: data.category,
         type: data.type === 'INCOME' ? TransactionType.INCOME : TransactionType.EXPENSE,
         date: date.toISOString(),
+        isPaid: false,
+        transactionCategory: data.type === 'INCOME' ? 'income' : 'variable'
       });
     }
 
@@ -212,6 +243,30 @@ const App: React.FC = () => {
     } catch (error) {
       console.error("Error saving transaction:", error);
       toast.error("Erro ao salvar transação. Verifique sua conexão.");
+    }
+  };
+
+  const handleTogglePaid = async (id: string) => {
+    const transaction = transactions.find(t => t.id === id);
+    if (!transaction) return;
+
+    const newIsPaid = !(transaction.isPaid ?? false);
+    const updatedTransaction = {
+      ...transaction,
+      isPaid: newIsPaid,
+      paidDate: newIsPaid ? new Date().toISOString() : undefined
+    };
+
+    setTransactions(prev => prev.map(t => t.id === id ? updatedTransaction : t));
+    toast.success(newIsPaid ? "Marcado como pago!" : "Desmarcado");
+
+    try {
+      await updateTransaction(updatedTransaction, session!.user.id);
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+      toast.error("Erro ao atualizar status.");
+      // Revert on error
+      setTransactions(prev => prev.map(t => t.id === id ? transaction : t));
     }
   };
 
@@ -258,13 +313,21 @@ const App: React.FC = () => {
   };
 
   const handleRemoveRecurring = async (id: string) => {
+    // Optimistic update
     setRecurringItems(prev => prev.filter(f => f.id !== id));
-    toast.success("Item recorrente removido.");
+    setTransactions(prev => prev.filter(t => t.recurringId !== id)); // Remove associated transactions from UI
+
+    toast.success("Item recorrente e histórico removidos.");
+
     try {
-      await deleteRecurring(id);
+      await Promise.all([
+        deleteRecurring(id),
+        deleteTransactionsByRecurringId(id)
+      ]);
     } catch (error) {
       console.error("Error deleting recurring:", error);
       toast.error("Erro ao deletar recorrente.");
+      // Note: Reverting this complex state would require refetching or more complex undo logic
     }
   };
 
@@ -328,6 +391,166 @@ const App: React.FC = () => {
 
   const monthLabel = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(currentDate);
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'home':
+        return (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <SmartInput
+              onTransactionParsed={handleAITransaction}
+              categories={DEFAULT_CATEGORIES}
+              currentDate={currentDate}
+            />
+            <DashboardStats transactions={transactions} currentDate={currentDate} />
+
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200">Últimas Transações</h2>
+                <button
+                  onClick={() => setActiveTab('transactions')}
+                  className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                >
+                  Ver todas
+                </button>
+              </div>
+              <div className="space-y-3">
+                {isLoadingData ? (
+                  <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
+                ) : filteredTransactions.slice(0, 5).map(transaction => (
+                  <TransactionCard
+                    key={transaction.id}
+                    transaction={transaction}
+                    onTogglePaid={handleTogglePaid}
+                    onDelete={handleDelete}
+                    onCategoryChange={handleCategoryChange}
+                  />
+                ))}
+                {filteredTransactions.length === 0 && (
+                  <div className="text-center py-10 text-slate-500 dark:text-slate-400">
+                    Nenhuma transação recente
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'transactions':
+        return (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Transações</h2>
+              <span className="text-sm text-slate-500 dark:text-slate-400">
+                {filteredTransactions.length} itens
+              </span>
+            </div>
+
+            <CategoryTabs
+              activeCategory={activeCategory}
+              onCategoryChange={setActiveCategory}
+              counts={categoryCounts}
+            />
+
+            <div className="space-y-3">
+              {isLoadingData ? (
+                <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
+              ) : filteredTransactions.length === 0 ? (
+                <div className="text-center py-10 text-slate-500 dark:text-slate-400">
+                  Nenhuma transação nesta categoria
+                </div>
+              ) : (
+                filteredTransactions.map(transaction => (
+                  <TransactionCard
+                    key={transaction.id}
+                    transaction={transaction}
+                    onTogglePaid={handleTogglePaid}
+                    onDelete={handleDelete}
+                    onCategoryChange={handleCategoryChange}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        );
+
+      case 'reports':
+        return (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            <SummaryCards stats={stats} />
+            <InsightsComponent transactions={transactions} budgetGoals={budgetGoals} />
+            <StatsCards
+              stats={stats}
+              categoryStats={categoryStats}
+              budgetGoals={budgetGoals}
+              onUpdateBudget={handleUpdateBudget}
+            />
+          </div>
+        );
+
+      case 'settings':
+        return (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Configurações</h2>
+
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-200 dark:border-slate-700"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
+                    <Settings className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-medium text-slate-900 dark:text-slate-100">Gerenciar Recorrentes</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Configurar salários e contas fixas</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-slate-400" />
+              </button>
+
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-200 dark:border-slate-700"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-400">
+                    {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-medium text-slate-900 dark:text-slate-100">Tema</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{darkMode ? 'Modo Escuro' : 'Modo Claro'}</p>
+                  </div>
+                </div>
+                <div className={`w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-full relative transition-colors ${darkMode ? 'bg-indigo-600 dark:bg-indigo-600' : ''}`}>
+                  <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${darkMode ? 'translate-x-5' : ''}`} />
+                </div>
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-between p-4 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg text-red-600 dark:text-red-400">
+                    <LogOut className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-medium text-red-600 dark:text-red-400">Sair da Conta</h3>
+                    <p className="text-sm text-red-400/70">Encerrar sessão atual</p>
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            <div className="text-center text-xs text-slate-400 dark:text-slate-500 mt-8">
+              Midas AI v0.1.0
+            </div>
+          </div>
+        );
+    }
+  };
+
   if (loadingSession) {
     return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>;
   }
@@ -352,77 +575,69 @@ const App: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-6">
               <div className="hidden md:flex items-center gap-2">
                 <div className="bg-indigo-600 p-1.5 rounded-lg">
                   <BarChart3 className="w-4 h-4 text-white" />
                 </div>
-                <h1 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">Midas AI</h1>
+                <h1 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white mr-4">Midas AI</h1>
               </div>
 
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className="p-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-700 transition-all rounded-lg"
-                title={darkMode ? "Modo Claro" : "Modo Escuro"}
-              >
-                {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
+              {/* Desktop Navigation */}
+              <nav className="hidden md:flex items-center gap-1">
+                <button
+                  onClick={() => setActiveTab('home')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'home' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                >
+                  Início
+                </button>
+                <button
+                  onClick={() => setActiveTab('transactions')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'transactions' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                >
+                  Transações
+                </button>
+                <button
+                  onClick={() => setActiveTab('reports')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'reports' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                >
+                  Relatórios
+                </button>
+              </nav>
 
-              <button
-                onClick={() => setIsSettingsOpen(true)}
-                className="p-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-700 transition-all rounded-lg"
-                title="Configurar recorrentes"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
+              {/* Desktop only buttons */}
+              <div className="hidden md:flex items-center gap-2">
+                <button
+                  onClick={() => setDarkMode(!darkMode)}
+                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-700 transition-all rounded-lg"
+                  title={darkMode ? "Modo Claro" : "Modo Escuro"}
+                >
+                  {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                </button>
 
-              <button
-                onClick={handleLogout}
-                className="p-2 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all rounded-lg"
-                title="Sair"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
+                <button
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-700 transition-all rounded-lg"
+                  title="Configurar recorrentes"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+
+                <button
+                  onClick={handleLogout}
+                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all rounded-lg"
+                  title="Sair"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </header>
-      <main className="max-w-3xl mx-auto px-4 py-6 space-y-8">
 
-        {/* Home Tab Content */}
-        <div className={`${activeTab === 'home' ? 'block' : 'hidden'} md:block space-y-8 animate-in fade-in duration-300`}>
-          <SmartInput
-            onTransactionParsed={handleAITransaction}
-            categories={DEFAULT_CATEGORIES}
-            currentDate={currentDate}
-          />
-
-          <SummaryCards stats={stats} />
-
-          <div>
-            {isLoadingData ? (
-              <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
-            ) : (
-              <TransactionList
-                transactions={currentMonthTransactions}
-                onDelete={handleDelete}
-                onCategoryChange={handleCategoryChange}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Reports Tab Content */}
-        <div className={`${activeTab === 'reports' ? 'block' : 'hidden'} md:block space-y-8 animate-in fade-in duration-300`}>
-          <InsightsComponent transactions={transactions} budgetGoals={budgetGoals} />
-
-          <StatsCards
-            stats={stats}
-            categoryStats={categoryStats}
-            budgetGoals={budgetGoals}
-            onUpdateBudget={handleUpdateBudget}
-          />
-        </div>
+      <main className="max-w-3xl mx-auto px-4 py-6">
+        {renderContent()}
       </main>
 
       <FixedIncomeModal

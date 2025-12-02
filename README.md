@@ -55,12 +55,22 @@ The application features:
 
 ### 3. **Transaction Management**
 - View all transactions by month
+- **Payment Status Tracking**: Mark transactions as paid/unpaid with visual feedback
+- **Three-Category System**: Organize as Income, Fixed Expenses, or Variable Expenses
+- **Color-coded Cards**: Pastel green for paid, pastel red for unpaid
+- Filter transactions by category (Income/Fixed/Variable)
 - Edit transaction categories
 - Delete transactions
-- Filter and search capabilities
 - Installment payment tracking
 
-### 4. **Recurring Transactions**
+### 4. **Dashboard & Analytics**
+- **Category Summary Cards**: Visual overview of Income, Fixed Expenses, and Variable Expenses
+- Track payment progress (e.g., "3/7 bills paid")
+- Percentage-based completion indicators
+- Category tabs for quick filtering
+- Real-time payment status updates
+
+### 5. **Recurring Transactions**
 - Set up monthly recurring income/expenses
 - Automatic transaction generation on specified days
 - Manage recurring items (add/remove)
@@ -109,8 +119,11 @@ The application features:
 App.tsx (Main Container)
 ├── Login.tsx (Authentication)
 ├── SmartInput.tsx (AI-powered input)
+├── DashboardStats.tsx (Category summary cards)
+├── CategoryTabs.tsx (Category filter tabs)
+├── TransactionCard.tsx (Individual transaction with payment status)
 ├── SummaryCards.tsx (Financial overview)
-├── TransactionList.tsx (Transaction display)
+├── TransactionList.tsx (Legacy transaction display)
 ├── StatsCards.tsx (Analytics & budgets)
 ├── InsightsComponent.tsx (AI insights)
 ├── FixedIncomeModal.tsx (Recurring transactions)
@@ -211,6 +224,10 @@ Stores all user transactions (both manual and recurring).
 | `date` | TIMESTAMPTZ | Transaction date |
 | `is_recurring` | BOOLEAN | Whether generated from recurring rule |
 | `recurring_id` | UUID | Links to recurring_transactions |
+| `is_paid` | BOOLEAN | Payment status (NEW) |
+| `transaction_category` | TEXT | 'income', 'fixed', or 'variable' (NEW) |
+| `due_date` | TIMESTAMPTZ | Due date for payment (NEW) |
+| `paid_date` | TIMESTAMPTZ | When marked as paid (NEW) |
 | `created_at` | TIMESTAMPTZ | Record creation timestamp |
 
 #### `recurring_transactions`
