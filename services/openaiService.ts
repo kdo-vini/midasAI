@@ -1,13 +1,14 @@
 import { supabase } from "./supabase";
 import { AIParsedTransaction } from "../types";
 
-export const parseTransactionFromText = async (text: string, availableCategories: string[]): Promise<AIParsedTransaction> => {
+export const parseTransactionFromText = async (text: string, availableCategories: string[], referenceDate?: Date): Promise<AIParsedTransaction> => {
     try {
         const { data, error } = await supabase.functions.invoke('ai-proxy', {
             body: {
                 type: 'parse',
                 prompt: text,
-                availableCategories
+                availableCategories,
+                referenceDate: referenceDate ? referenceDate.toISOString() : undefined
             }
         });
 

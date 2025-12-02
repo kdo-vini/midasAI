@@ -153,14 +153,19 @@ const App: React.FC = () => {
   }, [transactions, currentDate]);
 
   const handleAITransaction = async (data: AIParsedTransaction) => {
-    console.log("AI Data Received:", data); // Debug log
+    console.log("AI Data Received:", data);
     if (!data.amount || !data.category || !data.type || !session?.user) return;
 
-    // DEBUG TOAST
     toast.info(`Debug: Parcelas detectadas: ${data.installments} (Raw: ${JSON.stringify(data.installments)})`);
 
     const transactionsToSave: Transaction[] = [];
-    const baseDate = data.date ? new Date(data.date) : new Date();
+
+    // Fix: Parse YYYY-MM-DD manually to ensure local time (avoid UTC conversion issues)
+    let baseDate = new Date();
+    if (data.date) {
+      const [year, month, day] = data.date.split('-').map(Number);
+      baseDate = new Date(year, month - 1, day);
+    }
 
     // Robust parsing for installments
     let installments = 1;
@@ -191,17 +196,14 @@ const App: React.FC = () => {
       });
     }
 
-    // Optimistic Update
     setTransactions(prev => [...transactionsToSave, ...prev]);
     toast.success(installments > 1 ? `${installments} parcelas adicionadas!` : "Transação adicionada!");
 
     try {
-      // Save all transactions
       for (const tx of transactionsToSave) {
         await saveTransaction(tx, session.user.id);
       }
 
-      // Auto-add budget goal if missing (only once)
       if (data.type === 'EXPENSE' && !budgetGoals.some(b => b.category === data.category)) {
         const newBudget = { category: data.category!, targetPercentage: 0 };
         setBudgetGoals(prev => [...prev, newBudget]);
@@ -385,7 +387,6 @@ const App: React.FC = () => {
           </div>
         </div>
       </header>
-
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-8">
 
         {/* Home Tab Content */}
@@ -393,6 +394,7 @@ const App: React.FC = () => {
           <SmartInput
             onTransactionParsed={handleAITransaction}
             categories={DEFAULT_CATEGORIES}
+            currentDate={currentDate}
           />
 
           <SummaryCards stats={stats} />

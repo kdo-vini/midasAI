@@ -14,9 +14,10 @@ declare global {
 interface SmartInputProps {
   onTransactionParsed: (data: AIParsedTransaction) => void;
   categories: string[];
+  currentDate: Date;
 }
 
-export const SmartInput: React.FC<SmartInputProps> = ({ onTransactionParsed, categories }) => {
+export const SmartInput: React.FC<SmartInputProps> = ({ onTransactionParsed, categories, currentDate }) => {
   const [inputText, setInputText] = useState('');
   const [isProcessingAudio, setIsProcessingAudio] = useState(false);
   const [isSubmittingText, setIsSubmittingText] = useState(false);
@@ -56,7 +57,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({ onTransactionParsed, cat
     setIsSubmittingText(true);
     setAiMessage(null); // Clear previous message
     try {
-      const result = await parseTransactionFromText(inputText, categories);
+      const result = await parseTransactionFromText(inputText, categories, currentDate);
       handleResponse(result);
     } catch (error) {
       console.error(error);
@@ -109,7 +110,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({ onTransactionParsed, cat
     if (inputText.trim()) {
       setIsProcessingAudio(true);
       try {
-        const result = await parseTransactionFromText(inputText, categories);
+        const result = await parseTransactionFromText(inputText, categories, currentDate);
         handleResponse(result);
       } catch (error) {
         console.error("Audio processing error:", error);

@@ -12,7 +12,7 @@ serve(async (req) => {
     }
 
     try {
-        const { prompt, type, transactions, budgetGoals, availableCategories } = await req.json();
+        const { prompt, type, transactions, budgetGoals, availableCategories, referenceDate } = await req.json();
 
         if (!OPENAI_API_KEY) {
             throw new Error("OPENAI_API_KEY is not set");
@@ -23,7 +23,7 @@ serve(async (req) => {
         let responseFormat = null;
 
         if (type === 'parse') {
-            const currentDate = new Date().toISOString().split('T')[0];
+            const currentDate = referenceDate ? new Date(referenceDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
             const categoriesStr = availableCategories.join(", ");
 
             const systemPrompt = `
