@@ -12,7 +12,7 @@ serve(async (req) => {
     }
 
     try {
-        const { prompt, type, transactions, budgetGoals, availableCategories, referenceDate } = await req.json();
+        const { prompt, type, transactions, budgetGoals, availableCategories, referenceDate, language } = await req.json();
 
         if (!OPENAI_API_KEY) {
             throw new Error("OPENAI_API_KEY is not set");
@@ -21,13 +21,14 @@ serve(async (req) => {
         const modelId = "gpt-4o-mini";
         let messages = [];
         let responseFormat = null;
+        const targetLang = language === 'en' ? 'English' : 'Portuguese';
 
         if (type === 'parse') {
             const currentDate = referenceDate ? new Date(referenceDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
             const categoriesStr = availableCategories.join(", ");
 
             const systemPrompt = `
-      Analyze the Portuguese text. Today is ${currentDate}.
+      Analyze the text. Today is ${currentDate}.
       
       1. DETERMINE GOAL:
          - If it's a transaction (spending/receiving money), set isTransaction: true.
@@ -35,17 +36,17 @@ serve(async (req) => {
   
       2. IF TRANSACTION (isTransaction: true):
          - Extract amount, description, type, and date.
-         - CHECK FOR INSTALLMENTS: This is CRITICAL. Look for patterns like "em X vezes", "X parcelas", "10x", "12x", "parcelado em X". 
+         - CHECK FOR INSTALLMENTS: Look for patterns like "em X vezes", "X parcelas", "10x", "12x", "parcelado em X" (or English equivalents like "in 10 installments"). 
            Examples: 
            - "1200 em 10x" -> amount: 1200, installments: 10.
            - "Compra de 500 parcelado em 5 vezes" -> amount: 500, installments: 5.
            - "300 no crédito em 3x" -> amount: 300, installments: 3.
            If found, set "installments" to that integer. Default is 1.
          - CATEGORY MATCHING: Map to one of: [${categoriesStr}].
-         - "message": A short, friendly confirmation. If installments > 1, mention it (e.g., "Entendido, R$ 1200 em 10x de R$ 120.").
+         - "message": A short, friendly confirmation in ${targetLang}. If installments > 1, mention it.
   
       3. IF NOT TRANSACTION (isTransaction: false):
-         - "message": Answer the user's question or provide the requested advice. Be helpful, concise, and friendly.
+         - "message": Answer the user's question or provide the requested advice in ${targetLang}. Be helpful, concise, and friendly.
          - Leave amount, description, category, type, date as null/undefined.
       `;
 
@@ -83,7 +84,7 @@ serve(async (req) => {
             const insightPrompt = `
       Analyze these financial records and provide 1 single, valuable insight or tip (max 2 sentences).
       Focus on: overspending, saving opportunities, or budget adherence.
-      Be encouraging but direct. Language: Portuguese.
+      Be encouraging but direct. Language: ${targetLang}.
   
       Transactions (last 10): ${JSON.stringify(transactions)}
       Budgets: ${JSON.stringify(budgetGoals)}

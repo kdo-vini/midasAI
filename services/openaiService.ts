@@ -1,14 +1,15 @@
 import { supabase } from "./supabase";
 import { AIParsedTransaction } from "../types";
 
-export const parseTransactionFromText = async (text: string, availableCategories: string[], referenceDate?: Date): Promise<AIParsedTransaction> => {
+export const parseTransactionFromText = async (text: string, availableCategories: string[], referenceDate?: Date, language: string = 'pt'): Promise<AIParsedTransaction> => {
     try {
         const { data, error } = await supabase.functions.invoke('ai-proxy', {
             body: {
                 type: 'parse',
                 prompt: text,
                 availableCategories,
-                referenceDate: referenceDate ? referenceDate.toISOString() : undefined
+                referenceDate: referenceDate ? referenceDate.toISOString() : undefined,
+                language
             }
         });
 
@@ -22,23 +23,24 @@ export const parseTransactionFromText = async (text: string, availableCategories
     }
 };
 
-export const generateInsights = async (transactions: any[], budgetGoals: any[]): Promise<string> => {
-    if (transactions.length === 0) return "Adicione transações para receber insights personalizados.";
+export const generateInsights = async (transactions: any[], budgetGoals: any[], language: string = 'pt'): Promise<string> => {
+    if (transactions.length === 0) return language === 'pt' ? "Adicione transações para receber insights personalizados." : "Add transactions to receive personalized insights.";
 
     try {
         const { data, error } = await supabase.functions.invoke('ai-proxy', {
             body: {
                 type: 'insight',
                 transactions: transactions.slice(0, 10), // Limit to last 10 for performance
-                budgetGoals
+                budgetGoals,
+                language
             }
         });
 
         if (error) throw error;
 
-        return data?.content || "Sem insights no momento.";
+        return data?.content || (language === 'pt' ? "Sem insights no momento." : "No insights at the moment.");
     } catch (error) {
         console.error("AI Insight Error:", error);
-        return "Não foi possível gerar insights agora.";
+        return language === 'pt' ? "Não foi possível gerar insights agora." : "Could not generate insights right now.";
     }
 };

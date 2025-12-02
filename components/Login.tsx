@@ -3,8 +3,10 @@ import { supabase } from '../services/supabase';
 import { Loader2, Mail, Lock, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { PrivacyPolicyModal } from './PrivacyPolicyModal';
+import { useTranslation } from 'react-i18next';
 
 export const Login: React.FC = () => {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -21,7 +23,7 @@ export const Login: React.FC = () => {
                     password,
                 });
                 if (error) throw error;
-                toast.success('Verifique seu email para confirmar o cadastro!');
+                toast.success(t('login.verifyEmail'));
             } else {
                 const { error } = await supabase.auth.signInWithPassword({
                     email,
@@ -30,7 +32,7 @@ export const Login: React.FC = () => {
                 if (error) throw error;
             }
         } catch (error: any) {
-            toast.error(error.message || 'Erro ao autenticar');
+            toast.error(error.message || t('login.authError'));
         } finally {
             setLoading(false);
         }
@@ -44,12 +46,12 @@ export const Login: React.FC = () => {
                         <Sparkles className="w-8 h-8 text-white" />
                     </div>
                     <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Midas AI</h1>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Seu assistente financeiro inteligente</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{t('login.subtitle')}</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t('login.emailLabel')}</label>
                         <div className="relative">
                             <Mail className="w-5 h-5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                             <input
@@ -57,14 +59,14 @@ export const Login: React.FC = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all placeholder-slate-400 dark:placeholder-slate-500"
-                                placeholder="seu@email.com"
+                                placeholder={t('login.emailPlaceholder')}
                                 required
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Senha</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t('login.passwordLabel')}</label>
                         <div className="relative">
                             <Lock className="w-5 h-5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                             <input
@@ -72,7 +74,7 @@ export const Login: React.FC = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all placeholder-slate-400 dark:placeholder-slate-500"
-                                placeholder="••••••••"
+                                placeholder={t('login.passwordPlaceholder')}
                                 required
                             />
                         </div>
@@ -86,20 +88,20 @@ export const Login: React.FC = () => {
                         {loading ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
-                            isSignUp ? 'Criar Conta' : 'Entrar'
+                            isSignUp ? t('login.createAccount') : t('login.enter')
                         )}
                     </button>
                 </form>
 
                 {isSignUp && (
                     <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
-                        Ao criar sua conta, você concorda com nossa{' '}
+                        {t('login.agreeToPrivacy')}
                         <button
                             type="button"
                             onClick={() => setShowPrivacy(true)}
                             className="text-indigo-600 hover:underline dark:text-indigo-400 font-medium focus:outline-none"
                         >
-                            Política de Privacidade
+                            {t('login.privacyPolicy')}
                         </button>
                     </p>
                 )}
@@ -109,7 +111,7 @@ export const Login: React.FC = () => {
                         onClick={() => setIsSignUp(!isSignUp)}
                         className="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium hover:underline"
                     >
-                        {isSignUp ? 'Já tem uma conta? Entre aqui' : 'Não tem conta? Crie uma agora'}
+                        {isSignUp ? t('login.haveAccount') : t('login.needAccount')}
                     </button>
                 </div>
             </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { TransactionCategory } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface CategoryTabsProps {
     activeCategory: TransactionCategory | 'all';
@@ -17,11 +18,13 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
     onCategoryChange,
     counts
 }) => {
+    const { t } = useTranslation();
+
     const tabs = [
-        { id: 'all' as const, label: 'Todas', icon: '📊', color: 'slate' },
-        { id: 'income' as const, label: 'Receitas', icon: '💰', color: 'emerald' },
-        { id: 'fixed' as const, label: 'Fixas', icon: '🔴', color: 'red' },
-        { id: 'variable' as const, label: 'Variáveis', icon: '🟡', color: 'amber' },
+        { id: 'all' as const, label: t('categoryTabs.all'), icon: '📊', color: 'slate' },
+        { id: 'income' as const, label: t('categoryTabs.income'), icon: '💰', color: 'emerald' },
+        { id: 'fixed' as const, label: t('categoryTabs.fixed'), icon: '🔴', color: 'red' },
+        { id: 'variable' as const, label: t('categoryTabs.variable'), icon: '🟡', color: 'amber' },
     ];
 
     const getActiveClasses = (tabId: string, color: string) => {

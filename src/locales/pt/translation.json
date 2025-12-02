@@ -1,0 +1,157 @@
+{
+    "app": {
+        "title": "Midas AI",
+        "subtitle": "Gestão Financeira Inteligente",
+        "loading": "Carregando...",
+        "error": "Ocorreu um erro",
+        "save": "Salvar",
+        "cancel": "Cancelar",
+        "delete": "Excluir",
+        "edit": "Editar",
+        "confirm": "Confirmar",
+        "nav": {
+            "home": "Início",
+            "transactions": "Transações",
+            "reports": "Relatórios"
+        },
+        "theme": {
+            "dark": "Modo Escuro",
+            "light": "Modo Claro",
+            "label": "Tema"
+        },
+        "settings": {
+            "title": "Configurações",
+            "recurring": {
+                "title": "Gerenciar Recorrentes",
+                "desc": "Configurar salários e contas fixas"
+            },
+            "logout": {
+                "title": "Sair da Conta",
+                "desc": "Encerrar sessão atual"
+            }
+        }
+    },
+    "login": {
+        "welcome": "Bem-vindo ao Midas AI",
+        "signIn": "Entrar com Email",
+        "emailPlaceholder": "seu@email.com",
+        "magicLinkSent": "Link mágico enviado!",
+        "checkEmail": "Verifique seu email para entrar.",
+        "sending": "Enviando...",
+        "verifyEmail": "Verifique seu email para confirmar o cadastro!",
+        "authError": "Erro ao autenticar",
+        "subtitle": "Seu assistente financeiro inteligente",
+        "emailLabel": "Email",
+        "passwordLabel": "Senha",
+        "passwordPlaceholder": "••••••••",
+        "createAccount": "Criar Conta",
+        "enter": "Entrar",
+        "agreeToPrivacy": "Ao criar sua conta, você concorda com nossa ",
+        "privacyPolicy": "Política de Privacidade",
+        "haveAccount": "Já tem uma conta? Entre aqui",
+        "needAccount": "Não tem conta? Crie uma agora"
+    },
+    "smartInput": {
+        "placeholder": "Digite ou fale: 'Gastei 50 reais no mercado'...",
+        "listening": "Ouvindo...",
+        "processing": "Processando...",
+        "micPermission": "Permita o uso do microfone",
+        "errorProcessing": "Erro ao processar. Tente novamente.",
+        "browserNotSupported": "Seu navegador não suporta reconhecimento de voz.",
+        "micError": "Erro ao acessar microfone.",
+        "audioError": "Erro ao processar áudio. Tente novamente.",
+        "assistantLabel": "IA Assistant",
+        "listeningStatus": "OUVINDO...",
+        "speakNow": "Fale agora...",
+        "example": "Ex: Gastei 50 no almoço ou Como economizar?",
+        "processingMessage": "Processando sua mensagem..."
+    },
+    "dashboard": {
+        "latestTransactions": "Últimas Transações",
+        "viewAll": "Ver todas",
+        "noRecentTransactions": "Nenhuma transação recente",
+        "transactionsTitle": "Transações",
+        "items": "itens",
+        "noTransactionsInCategory": "Nenhuma transação nesta categoria",
+        "income": "Receitas",
+        "fixedExpenses": "Despesas Fixas",
+        "variableExpenses": "Despesas Variáveis",
+        "paid": "Pago"
+    },
+    "summary": {
+        "balance": "Saldo Atual",
+        "income": "Entradas",
+        "expenses": "Saídas"
+    },
+    "reports": {
+        "monthlyReport": "Relatório Mensal",
+        "expenseDistribution": "Distribuição de Gastos",
+        "noExpenses": "Sem gastos registrados.",
+        "totalExpenses": "Total Gastos",
+        "savings": "Economia",
+        "table": {
+            "category": "Categoria",
+            "goal": "Meta",
+            "actual": "Real",
+            "status": "Status"
+        },
+        "emptyState": "Adicione rendas e gastos para gerar o relatório.",
+        "budgetGoals": "Metas de Orçamento",
+        "totalPlanned": "Total Planejado",
+        "budgetExceeded": "O orçamento excede 100%."
+    },
+    "toasts": {
+        "loadError": "Erro ao carregar dados.",
+        "recurringAdded": "transações recorrentes adicionadas.",
+        "installmentsAdded": "parcelas adicionadas!",
+        "transactionAdded": "Transação adicionada!",
+        "saveError": "Erro ao salvar transação. Verifique sua conexão.",
+        "markedPaid": "Marcado como pago!",
+        "markedUnpaid": "Desmarcado",
+        "statusUpdateError": "Erro ao atualizar status.",
+        "transactionRemoved": "Transação removida.",
+        "deleteError": "Erro ao deletar.",
+        "categoryUpdated": "Categoria atualizada.",
+        "categoryUpdateError": "Erro ao atualizar categoria.",
+        "recurringSaved": "Item recorrente salvo.",
+        "recurringSaveError": "Erro ao salvar recorrente.",
+        "recurringRemoved": "Item recorrente e histórico removidos.",
+        "recurringDeleteError": "Erro ao deletar recorrente.",
+        "budgetUpdated": "Orçamento atualizado.",
+        "budgetSaveError": "Erro ao salvar orçamento.",
+        "loggedOut": "Você saiu da conta."
+    },
+    "insights": {
+        "title": "Midas Insights",
+        "generate": "Gerar novo insight",
+        "description": "Clique no botão para receber uma análise inteligente das suas finanças baseada nos seus gastos recentes.",
+        "error": "Erro ao gerar insights."
+    },
+    "transactionCard": {
+        "markUnpaid": "Desmarcar",
+        "pay": "Pagar",
+        "delete": "Deletar",
+        "paidOn": "Pago em"
+    },
+    "categoryTabs": {
+        "all": "Todas",
+        "income": "Receitas",
+        "fixed": "Fixas",
+        "variable": "Variáveis"
+    },
+    "fixedIncomeModal": {
+        "title": "Transações Fixas / Mensais",
+        "currentItems": "Itens Atuais",
+        "everyDay": "Todo dia",
+        "newItem": "Novo Item Recorrente",
+        "fixedIncome": "Entrada Fixa",
+        "fixedExpense": "Gasto Fixo",
+        "description": "Descrição",
+        "value": "Valor (R$)",
+        "dayOfMonth": "Dia do Mês",
+        "category": "Categoria",
+        "placeholderDescIncome": "Ex: Salário, Bônus Mensal",
+        "placeholderDescExpense": "Ex: Aluguel, Academia",
+        "add": "Adicionar"
+    }
+}

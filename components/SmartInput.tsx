@@ -3,6 +3,7 @@ import { Mic, Send, Loader2, Square, Wand2, Sparkles, X } from 'lucide-react';
 import { parseTransactionFromText } from '../services/openaiService';
 import { AIParsedTransaction } from '../types';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 declare global {
   interface Window {
@@ -18,6 +19,7 @@ interface SmartInputProps {
 }
 
 export const SmartInput: React.FC<SmartInputProps> = ({ onTransactionParsed, categories, currentDate }) => {
+  const { t, i18n } = useTranslation();
   const [inputText, setInputText] = useState('');
   const [isProcessingAudio, setIsProcessingAudio] = useState(false);
   const [isSubmittingText, setIsSubmittingText] = useState(false);
@@ -57,11 +59,11 @@ export const SmartInput: React.FC<SmartInputProps> = ({ onTransactionParsed, cat
     setIsSubmittingText(true);
     setAiMessage(null); // Clear previous message
     try {
-      const result = await parseTransactionFromText(inputText, categories, currentDate);
+      const result = await parseTransactionFromText(inputText, categories, currentDate, i18n.language);
       handleResponse(result);
     } catch (error) {
       console.error(error);
-      toast.error('Erro ao processar. Tente novamente.');
+      toast.error(t('smartInput.errorProcessing'));
     } finally {
       setIsSubmittingText(false);
     }
@@ -73,7 +75,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({ onTransactionParsed, cat
       if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
-        recognition.lang = 'pt-BR';
+        recognition.lang = i18n.language;
         recognition.continuous = true;
         recognition.interimResults = true;
 
@@ -91,11 +93,11 @@ export const SmartInput: React.FC<SmartInputProps> = ({ onTransactionParsed, cat
         recognitionRef.current = recognition;
         setIsRecording(true);
       } else {
-        toast.error("Seu navegador não suporta reconhecimento de voz.");
+        toast.error(t('smartInput.browserNotSupported'));
       }
     } catch (err) {
       console.error("Error accessing microphone", err);
-      toast.error("Erro ao acessar microfone.");
+      toast.error(t('smartInput.micError'));
     }
   };
 
@@ -110,11 +112,11 @@ export const SmartInput: React.FC<SmartInputProps> = ({ onTransactionParsed, cat
     if (inputText.trim()) {
       setIsProcessingAudio(true);
       try {
-        const result = await parseTransactionFromText(inputText, categories, currentDate);
+        const result = await parseTransactionFromText(inputText, categories, currentDate, i18n.language);
         handleResponse(result);
       } catch (error) {
         console.error("Audio processing error:", error);
-        toast.error('Erro ao processar áudio. Tente novamente.');
+        toast.error(t('smartInput.audioError'));
       } finally {
         setIsProcessingAudio(false);
       }
@@ -146,12 +148,12 @@ export const SmartInput: React.FC<SmartInputProps> = ({ onTransactionParsed, cat
         <div className="flex items-center justify-between text-slate-400 dark:text-slate-500 text-sm mb-1">
           <div className="flex items-center space-x-2">
             <Wand2 className="w-4 h-4 text-indigo-400 dark:text-indigo-300" />
-            <span className="text-xs font-medium uppercase tracking-wide">IA Assistant</span>
+            <span className="text-xs font-medium uppercase tracking-wide">{t('smartInput.assistantLabel')}</span>
           </div>
           {isRecording && (
             <span className="text-red-500 font-bold text-xs animate-pulse flex items-center gap-1">
               <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-              OUVINDO...
+              {t('smartInput.listeningStatus')}
             </span>
           )}
         </div>
@@ -162,7 +164,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({ onTransactionParsed, cat
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder={isRecording ? "Fale agora..." : "Ex: Gastei 50 no almoço ou Como economizar?"}
+              placeholder={isRecording ? t('smartInput.speakNow') : t('smartInput.example')}
               className={`w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 transition-all text-base ${isRecording
                 ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-100 placeholder-indigo-300'
                 : 'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500'
@@ -175,7 +177,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({ onTransactionParsed, cat
               <div className="absolute inset-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-[1px] rounded-xl z-10 flex items-center justify-start px-4 border border-indigo-100 dark:border-slate-700">
                 <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 animate-pulse">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm font-medium">Processando sua mensagem...</span>
+                  <span className="text-sm font-medium">{t('smartInput.processingMessage')}</span>
                 </div>
               </div>
             )}

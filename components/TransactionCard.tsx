@@ -2,6 +2,7 @@ import React from 'react';
 import { Transaction, TransactionType } from '../types';
 import { Trash2, Check } from 'lucide-react';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface TransactionCardProps {
     transaction: Transaction;
@@ -15,6 +16,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
     onTogglePaid,
     onDelete,
 }) => {
+    const { t, i18n } = useTranslation();
     const isIncome = transaction.type === TransactionType.INCOME;
     const isPaid = transaction.isPaid ?? false;
 
@@ -62,16 +64,16 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
 
     const formatDate = (dateStr: string) => {
         const date = new Date(dateStr);
-        return new Intl.DateTimeFormat('pt-BR', {
+        return new Intl.DateTimeFormat(i18n.language, {
             day: '2-digit',
             month: 'short'
         }).format(date);
     };
 
     const formatAmount = (amount: number) => {
-        return new Intl.NumberFormat('pt-BR', {
+        return new Intl.NumberFormat(i18n.language === 'pt' ? 'pt-BR' : 'en-US', {
             style: 'currency',
-            currency: 'BRL'
+            currency: i18n.language === 'pt' ? 'BRL' : 'USD'
         }).format(amount);
     };
 
@@ -85,7 +87,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
                 >
                     <motion.div style={{ scale: backgroundScale }} className="flex items-center gap-2 text-white font-medium">
                         <Check className="w-5 h-5" />
-                        <span>{isPaid ? 'Desmarcar' : 'Pagar'}</span>
+                        <span>{isPaid ? t('transactionCard.markUnpaid') : t('transactionCard.pay')}</span>
                     </motion.div>
                 </motion.div>
             )}
@@ -150,7 +152,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
                                         onDelete(transaction.id);
                                     }}
                                     className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                                    title="Deletar"
+                                    title={t('transactionCard.delete')}
                                 >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
@@ -160,7 +162,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
                         {/* Status badge - Only for Fixed Expenses */}
                         {isPaid && isFixedExpense && transaction.paidDate && (
                             <div className="mt-2 text-xs text-green-600 dark:text-green-400">
-                                ✓ Pago em {formatDate(transaction.paidDate)}
+                                ✓ {t('transactionCard.paidOn')} {formatDate(transaction.paidDate)}
                             </div>
                         )}
                     </div>

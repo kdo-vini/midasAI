@@ -1,5 +1,6 @@
 import React from 'react';
 import { Home, PieChart, List, Settings } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export type TabType = 'home' | 'transactions' | 'reports' | 'settings';
 
@@ -9,11 +10,13 @@ interface BottomNavProps {
 }
 
 export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange }) => {
+    const { t } = useTranslation();
+
     const navItems = [
-        { id: 'home' as const, label: 'Início', icon: Home },
-        { id: 'transactions' as const, label: 'Transações', icon: List },
-        { id: 'reports' as const, label: 'Relatórios', icon: PieChart },
-        { id: 'settings' as const, label: 'Config', icon: Settings },
+        { id: 'home' as const, label: t('app.nav.home'), icon: Home },
+        { id: 'transactions' as const, label: t('app.nav.transactions'), icon: List },
+        { id: 'reports' as const, label: t('app.nav.reports'), icon: PieChart },
+        { id: 'settings' as const, label: t('app.settings.title'), icon: Settings },
     ];
 
     return (
@@ -28,8 +31,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange }) 
                             key={item.id}
                             onClick={() => onTabChange(item.id)}
                             className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 ${isActive
-                                    ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20'
-                                    : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+                                ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20'
+                                : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
                                 }`}
                         >
                             <Icon className={`w-6 h-6 ${isActive ? 'fill-current opacity-20' : ''}`} strokeWidth={isActive ? 2.5 : 2} />
