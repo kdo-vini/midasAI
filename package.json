@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://kdo-vini.github.io/midasAI/",
+  "homepage": "https://midas.techneia.com.br",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
