@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { SmartInput } from './components/SmartInput';
 import { SummaryCards } from './components/SummaryCards';
 import { StatsCards } from './components/StatsCards';
@@ -51,7 +52,14 @@ const App: React.FC = () => {
 
   // --- Auth & Initial Load ---
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error("Error restoring session:", error);
+        // If the refresh token is invalid, sign out to clear bad state
+        if (error.message && (error.message.includes("Refresh Token") || error.message.includes("refresh_token"))) {
+          supabase.auth.signOut();
+        }
+      }
       setSession(session);
       setLoadingSession(false);
     });
@@ -116,7 +124,7 @@ const App: React.FC = () => {
           targetDate.setDate(safeDay);
 
           newTransactions.push({
-            id: crypto.randomUUID(),
+            id: uuidv4(),
             amount: item.amount,
             description: item.name,
             category: item.category,
@@ -218,7 +226,7 @@ const App: React.FC = () => {
         : data.description || 'Transação';
 
       transactionsToSave.push({
-        id: crypto.randomUUID(),
+        id: uuidv4(),
         amount: installmentAmount,
         description: description,
         category: data.category,
@@ -296,7 +304,7 @@ const App: React.FC = () => {
 
   const handleAddRecurring = async (item: Omit<RecurringTransaction, 'id'>) => {
     if (!session?.user) return;
-    const newItem: RecurringTransaction = { ...item, id: crypto.randomUUID() };
+    const newItem: RecurringTransaction = { ...item, id: uuidv4() };
     setRecurringItems(prev => [...prev, newItem]);
     toast.success(t('toasts.recurringSaved'));
 
@@ -589,15 +597,15 @@ const App: React.FC = () => {
                 >
                   <defs>
                     <linearGradient id="midasGradient" x1="0" y1="32" x2="64" y2="32" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stop-color="#4F46E5" />
-                      <stop offset="100%" stop-color="#8B5CF6" />
+                      <stop offset="0%" stopColor="#4F46E5" />
+                      <stop offset="100%" stopColor="#8B5CF6" />
                     </linearGradient>
                   </defs>
                   <path
                     d="M6 50V18L20 32L32 18L44 32L58 18V50H6Z"
                     stroke="url(#midasGradient)"
-                    stroke-width="5"
-                    stroke-linejoin="round"
+                    strokeWidth="5"
+                    strokeLinejoin="round"
                     fill="none"
                   />
                 </svg>
