@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Mic, Send, Loader2, Square, Wand2, Sparkles, X } from 'lucide-react';
 import { parseTransactionFromText } from '../services/openaiService';
-import { AIParsedTransaction } from '../types';
+import { AIParsedTransaction, Transaction, BudgetGoal, MonthlyStats } from '../types';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
@@ -16,9 +16,19 @@ interface SmartInputProps {
   onTransactionParsed: (data: AIParsedTransaction) => void;
   categories: string[];
   currentDate: Date;
+  transactions: Transaction[];
+  budgetGoals: BudgetGoal[];
+  monthlyStats: MonthlyStats;
 }
 
-export const SmartInput: React.FC<SmartInputProps> = ({ onTransactionParsed, categories, currentDate }) => {
+export const SmartInput: React.FC<SmartInputProps> = ({
+  onTransactionParsed,
+  categories,
+  currentDate,
+  transactions,
+  budgetGoals,
+  monthlyStats
+}) => {
   const { t, i18n } = useTranslation();
   const [inputText, setInputText] = useState('');
   const [isProcessingAudio, setIsProcessingAudio] = useState(false);
@@ -59,7 +69,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({ onTransactionParsed, cat
     setIsSubmittingText(true);
     setAiMessage(null); // Clear previous message
     try {
-      const result = await parseTransactionFromText(inputText, categories, currentDate, i18n.language);
+      const result = await parseTransactionFromText(inputText, categories, currentDate, i18n.language, transactions, budgetGoals, monthlyStats);
       handleResponse(result);
     } catch (error) {
       console.error(error);
@@ -112,7 +122,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({ onTransactionParsed, cat
     if (inputText.trim()) {
       setIsProcessingAudio(true);
       try {
-        const result = await parseTransactionFromText(inputText, categories, currentDate, i18n.language);
+        const result = await parseTransactionFromText(inputText, categories, currentDate, i18n.language, transactions, budgetGoals, monthlyStats);
         handleResponse(result);
       } catch (error) {
         console.error("Audio processing error:", error);

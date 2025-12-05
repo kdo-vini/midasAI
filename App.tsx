@@ -410,6 +410,9 @@ const App: React.FC = () => {
               onTransactionParsed={handleAITransaction}
               categories={DEFAULT_CATEGORIES}
               currentDate={currentDate}
+              transactions={currentMonthTransactions}
+              budgetGoals={budgetGoals}
+              monthlyStats={stats}
             />
             <DashboardStats transactions={transactions} currentDate={currentDate} />
 

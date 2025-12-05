@@ -12,7 +12,7 @@ serve(async (req) => {
     }
 
     try {
-        const { prompt, type, transactions, budgetGoals, availableCategories, referenceDate, language } = await req.json();
+        const { prompt, type, transactions, budgetGoals, availableCategories, referenceDate, language, monthlyStats } = await req.json();
 
         if (!OPENAI_API_KEY) {
             throw new Error("OPENAI_API_KEY is not set");
@@ -24,15 +24,71 @@ serve(async (req) => {
         const targetLang = language === 'en' ? 'English' : 'Portuguese';
 
         if (type === 'parse') {
-            const currentDate = referenceDate ? new Date(referenceDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+            const refDate = referenceDate ? new Date(referenceDate) : new Date();
+            const currentDate = refDate.toISOString().split('T')[0];
+            const dayOfMonth = refDate.getDate();
             const categoriesStr = availableCategories.join(", ");
+
+            // Build financial context if available
+            let financialContext = "";
+            if (transactions && transactions.length > 0 && budgetGoals && budgetGoals.length > 0 && monthlyStats) {
+                // Calculate spending per category
+                const categorySpending: Record<string, number> = {};
+                transactions.forEach((t: any) => {
+                    if (t.type === 'EXPENSE') {
+                        categorySpending[t.category] = (categorySpending[t.category] || 0) + t.amount;
+                    }
+                });
+
+                // Build budget status
+                const budgetStatus = budgetGoals.map((goal: any) => {
+                    const spent = categorySpending[goal.category] || 0;
+                    const budgetAmount = (monthlyStats.totalIncome * goal.targetPercentage) / 100;
+                    const usagePercent = budgetAmount > 0 ? Math.round((spent / budgetAmount) * 100) : 0;
+                    return `${goal.category}: spent ${spent.toFixed(2)} of ${budgetAmount.toFixed(2)} budget (${usagePercent}% used)`;
+                }).join("; ");
+
+                financialContext = `
+      FINANCIAL CONTEXT (use this to answer questions about spending/budget):
+      - Day of month: ${dayOfMonth} (1-10 = beginning, 11-20 = middle, 21-31 = end)
+      - Total income this month: ${monthlyStats.totalIncome}
+      - Total expenses this month: ${monthlyStats.totalExpense}
+      - Balance: ${monthlyStats.balance}
+      - Budget status by category: ${budgetStatus}
+      
+      SMART ADVICE PROTOCOL:
+      
+      STEP 1: CHECK FOR SPECIFIC AMOUNT IN USER INPUT
+      - Does the user say "spend 500", "buy X for 200", etc?
+      - IF YES:
+        1. Identify the category (e.g., "comida" -> "Alimentação").
+        2. Find the budget limit for that category in the context above.
+        3. Calculate: (Current Spent) + (Requested Amount) = (New Total).
+        4. COMPARE: Is (New Total) > (Budget Limit)?
+           - YES: YOU MUST SAY NO. "Não recomendo." Explain that [Current] + [New] = [Total], which is greater than the limit.
+           - NO: Proceed to STEP 2.
+      
+      STEP 2: CHECK BUDGET USAGE PERCENTAGE (Only if Step 1 passed or no amount specified)
+      - 0-30% used: ENTHUSIASTICALLY APPROVE! "Pode sim!", "Tranquilo!".
+      - 31-60% used: APPROVE with a friendly note.
+      - 61-80% used: APPROVE but mention caution.
+      - 81-99% used: CAUTION - close to limit.
+      - 100%+ used: ADVISE AGAINST.
+      
+      STEP 3: DAY OF MONTH CONTEXT
+      - Use only to support the advice from Step 1/2.
+      
+      CRITICAL: DO NOT approve a specific amount if it exceeds the budget, even if the current spending is 0%. Math trumps feelings.
+      
+      TONE: Helpful, direct, but strict on math.`;
+            }
 
             const systemPrompt = `
       Analyze the text. Today is ${currentDate}.
       
       1. DETERMINE GOAL:
          - If it's a transaction (spending/receiving money), set isTransaction: true.
-         - If it's a question, advice request, or random chat, set isTransaction: false.
+         - If it's a question about whether they CAN spend, budget advice, or any other question, set isTransaction: false.
   
       2. IF TRANSACTION (isTransaction: true):
          - Extract amount, description, type, and date.
@@ -46,8 +102,11 @@ serve(async (req) => {
          - "message": A short, friendly confirmation in ${targetLang}. If installments > 1, mention it.
   
       3. IF NOT TRANSACTION (isTransaction: false):
-         - "message": Answer the user's question or provide the requested advice in ${targetLang}. Be helpful, concise, and friendly.
+         - Use the FINANCIAL CONTEXT below to give personalized, data-driven advice.
+         - "message": Answer the user's question with specific budget data in ${targetLang}. Be helpful, concise, and friendly.
+         - If asking "Can I spend X on Y?", check the relevant category budget and day of month.
          - Leave amount, description, category, type, date as null/undefined.
+      ${financialContext}
       `;
 
             const transactionSchema = {
@@ -60,14 +119,14 @@ serve(async (req) => {
                     type: { type: ["string", "null"], enum: ["INCOME", "EXPENSE", null], description: "Type of transaction." },
                     date: { type: ["string", "null"], description: "ISO date string (YYYY-MM-DD)." },
                     installments: { type: ["integer", "null"], description: "Number of installments if specified (e.g. 10 for '10x'). Default to 1 or null if not specified." },
-                    message: { type: "string", description: "If isTransaction is FALSE, answer the user's question here. If TRUE, provide a short confirmation or insight." }
+                    message: { type: "string", description: "If isTransaction is FALSE, answer the user's question here with budget data. If TRUE, provide a short confirmation." }
                 },
                 required: ["isTransaction", "amount", "description", "category", "type", "date", "installments", "message"],
                 additionalProperties: false
             };
 
             messages = [
-                { role: "system", content: "You are a helpful financial assistant. Output JSON only." },
+                { role: "system", content: "You are a smart personal financial assistant. You help users track expenses AND give budget-aware advice. Output JSON only." },
                 { role: "user", content: `${systemPrompt}\nInput: "${prompt}"` }
             ];
 

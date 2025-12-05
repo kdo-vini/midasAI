@@ -1,7 +1,15 @@
 import { supabase } from "./supabase";
-import { AIParsedTransaction } from "../types";
+import { AIParsedTransaction, Transaction, BudgetGoal, MonthlyStats } from "../types";
 
-export const parseTransactionFromText = async (text: string, availableCategories: string[], referenceDate?: Date, language: string = 'pt'): Promise<AIParsedTransaction> => {
+export const parseTransactionFromText = async (
+    text: string,
+    availableCategories: string[],
+    referenceDate?: Date,
+    language: string = 'pt',
+    transactions?: Transaction[],
+    budgetGoals?: BudgetGoal[],
+    monthlyStats?: MonthlyStats
+): Promise<AIParsedTransaction> => {
     try {
         const { data, error } = await supabase.functions.invoke('ai-proxy', {
             body: {
@@ -9,7 +17,10 @@ export const parseTransactionFromText = async (text: string, availableCategories
                 prompt: text,
                 availableCategories,
                 referenceDate: referenceDate ? referenceDate.toISOString() : undefined,
-                language
+                language,
+                transactions: transactions || [],
+                budgetGoals: budgetGoals || [],
+                monthlyStats: monthlyStats || null
             }
         });
 
