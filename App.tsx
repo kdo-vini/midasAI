@@ -180,7 +180,8 @@ const App: React.FC = () => {
       all: currentMonthTransactions.length,
       income: 0,
       fixed: 0,
-      variable: 0
+      variable: 0,
+      savings: 0
     };
 
     currentMonthTransactions.forEach(t => {
@@ -188,6 +189,7 @@ const App: React.FC = () => {
       if (category === 'income') counts.income++;
       else if (category === 'fixed') counts.fixed++;
       else if (category === 'variable') counts.variable++;
+      else if (category === 'savings') counts.savings++;
     });
 
     return counts;
@@ -233,7 +235,7 @@ const App: React.FC = () => {
         type: data.type === 'INCOME' ? TransactionType.INCOME : TransactionType.EXPENSE,
         date: date.toISOString(),
         isPaid: false,
-        transactionCategory: data.type === 'INCOME' ? 'income' : 'variable'
+        transactionCategory: data.category === 'Economias' ? 'savings' : (data.type === 'INCOME' ? 'income' : 'variable')
       });
     }
 

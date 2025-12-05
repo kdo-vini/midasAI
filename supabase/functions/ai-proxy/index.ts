@@ -99,6 +99,7 @@ serve(async (req) => {
            - "300 no crédito em 3x" -> amount: 300, installments: 3.
            If found, set "installments" to that integer. Default is 1.
          - CATEGORY MATCHING: Map to one of: [${categoriesStr}].
+           * SPECIAL RULE: If text contains "guardar", "investir", "poupança", "reserva", "aplicação", map to "Economias".
          - "message": A short, friendly confirmation in ${targetLang}. If installments > 1, mention it.
   
       3. IF NOT TRANSACTION (isTransaction: false):

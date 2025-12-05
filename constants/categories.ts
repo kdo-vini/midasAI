@@ -10,5 +10,6 @@ export const DEFAULT_CATEGORIES = [
     "Serviços",
     "Compras",
     "Viagem",
+    "Economias",
     "Outros"
 ];

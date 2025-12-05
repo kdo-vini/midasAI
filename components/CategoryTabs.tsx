@@ -10,6 +10,7 @@ interface CategoryTabsProps {
         income: number;
         fixed: number;
         variable: number;
+        savings: number;
     };
 }
 
@@ -25,6 +26,7 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
         { id: 'income' as const, label: t('categoryTabs.income'), icon: '💰', color: 'emerald' },
         { id: 'fixed' as const, label: t('categoryTabs.fixed'), icon: '🔴', color: 'red' },
         { id: 'variable' as const, label: t('categoryTabs.variable'), icon: '🟡', color: 'amber' },
+        { id: 'savings' as const, label: t('categoryTabs.savings', 'Economias'), icon: '🐷', color: 'blue' },
     ];
 
     const getActiveClasses = (tabId: string, color: string) => {
@@ -34,6 +36,7 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
                 emerald: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-900 dark:text-emerald-100 border-emerald-300 dark:border-emerald-700',
                 red: 'bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-100 border-red-300 dark:border-red-700',
                 amber: 'bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-100 border-amber-300 dark:border-amber-700',
+                blue: 'bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 border-blue-300 dark:border-blue-700',
             };
             return colorMap[color] || colorMap.slate;
         }

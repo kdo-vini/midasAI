@@ -3,7 +3,7 @@ export enum TransactionType {
   EXPENSE = 'EXPENSE'
 }
 
-export type TransactionCategory = 'income' | 'fixed' | 'variable';
+export type TransactionCategory = 'income' | 'fixed' | 'variable' | 'savings';
 
 export interface Transaction {
   id: string;
