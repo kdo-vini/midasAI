@@ -119,6 +119,8 @@ App.tsx (Main Container)
 ├── StatsCards.tsx (Analytics & budgets)
 ├── InsightsComponent.tsx (AI insights)
 ├── FixedIncomeModal.tsx (Recurring transactions)
+├── FloatingChat.tsx (Conversational AI assistant)
+├── LandingPage.tsx (Public landing page)
 └── BottomNav.tsx (Mobile navigation)
 ```
 
@@ -352,6 +354,12 @@ The application uses a Supabase Edge Function (`ai-proxy`) to securely communica
    - Analyzes spending patterns
    - Provides personalized financial advice
    - Compares against budget goals
+
+3. **Chat Assistant** (`type: 'chat'`)
+   - Conversational financial advice
+   - Context-aware responses (considering current budget and spending)
+   - Supports Markdown formatting (bold, lists)
+   - Category-aware (knows that "snacks" = "Alimentação")
 
 ### AI Response Structure
 

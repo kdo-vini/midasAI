@@ -101,12 +101,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     entry.target.classList.add('active');
                 }
             });
-        }, { threshold: 0.1 });
+        }, { threshold: 0.1 }); // Low threshold for better mobile detection
 
         const revealedElements = document.querySelectorAll('.reveal');
         revealedElements.forEach(el => observer.observe(el));
 
-        return () => observer.disconnect();
+        // Fallback: Make everything visible after 1s just in case
+        const timeout = setTimeout(() => {
+            document.querySelectorAll('.reveal').forEach(el => el.classList.add('active'));
+        }, 1000);
+
+        return () => {
+            observer.disconnect();
+            clearTimeout(timeout);
+        };
     }, []);
 
     return (
@@ -118,11 +126,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             <header className="landing-header">
                 <Logo />
                 <nav className="landing-nav">
-                    <a href="#">Recursos</a>
-                    <a href="#">Preços</a>
+                    <a href="#features">Recursos</a>
+                    <a href="#pricing">Preços</a>
                     <button
                         onClick={onLoginClick}
-                        className="ml-8 text-sm font-medium transition-colors"
+                        className="text-sm font-medium transition-colors"
                         style={{ color: 'var(--gold-primary)', background: 'none', border: 'none' }}
                     >
                         Login
@@ -131,16 +139,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             </header>
 
             <section className="hero">
-                <h1 className="reveal">
+                <h1 className="reveal active"> {/* Hero always visible initially to prevent blank screen */}
                     Suas finanças,<br />
                     <span className="gradient-text">sem esforço.</span>
                 </h1>
-                <p className="subtitle reveal">
+                <p className="subtitle reveal active">
                     O primeiro assistente que organiza sua vida financeira através de conversas naturais.
                     Você fala, o Midas cuida do resto.
                 </p>
 
-                <div className="phone-mockup reveal" id="phoneTilt" ref={phoneRef}>
+                <div className="phone-mockup reveal active" id="phoneTilt" ref={phoneRef}>
                     <div className="island"></div>
                     <div className="screen-content" id="chatScreen">
                         {messages.map((msg, idx) => {
@@ -184,28 +192,84 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 </div>
             </div>
 
-            <section className="features-section">
-                <div className="section-header reveal">
+            <section id="features" className="features-section">
+                <div className="section-header">
                     <h2>Poder de verdade.</h2>
                     <p style={{ color: 'var(--text-muted)' }}>Tecnologia avançada envelopada em simplicidade.</p>
                 </div>
 
                 <div className="grid-cards">
-                    <div className="feature-card reveal">
+                    <div className="feature-card">
                         <div className="feature-icon">🎙️</div>
                         <h3>Voice-to-Finance</h3>
                         <p style={{ color: '#aaa' }}>O motor de IA entende gírias, datas relativas ("semana que vem") e contextos complexos de áudio.</p>
                     </div>
-                    <div className="feature-card reveal">
+                    <div className="feature-card">
                         <div className="feature-icon">🛍️</div>
                         <h3>Parcelas Inteligentes</h3>
                         <p style={{ color: '#aaa' }}>Comprou em 10x? O Midas projeta seu fluxo de caixa futuro automaticamente.</p>
                     </div>
-                    <div className="feature-card reveal">
+                    <div className="feature-card">
                         <div className="feature-icon">🛡️</div>
                         <h3>Guardião de Metas</h3>
                         <p style={{ color: '#aaa' }}>Ele analisa seus hábitos e avisa gentilmente quando você está prestes a sair da linha.</p>
                     </div>
+                </div>
+            </section>
+
+            <section id="pricing" className="pricing-section">
+                <div className="section-header">
+                    <h2>Acesso Total.</h2>
+                    <p style={{ color: 'var(--text-muted)' }}>Comece a controlar sua vida financeira hoje.</p>
+                </div>
+
+                <div className="pricing-card">
+                    <div style={{
+                        position: 'absolute',
+                        top: '-15px',
+                        right: '50%',
+                        transform: 'translateX(50%)',
+                        background: 'var(--gold-primary)',
+                        color: 'black',
+                        padding: '5px 15px',
+                        borderRadius: '20px',
+                        fontSize: '0.8rem',
+                        fontWeight: 'bold'
+                    }}>
+                        1 MÊS GRÁTIS
+                    </div>
+
+                    <h3 style={{ fontSize: '1.2rem', color: '#fff', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '0' }}>Plano Único</h3>
+                    <div className="price-tag">
+                        19,90 <span className="price-period">/mês</span>
+                    </div>
+
+                    <ul className="check-list">
+                        <li><span className="check-icon">✓</span> <strong>Organização Financeira Completa</strong></li>
+                        <li><span className="check-icon">✓</span> Dashboards Interativos</li>
+                        <li><span className="check-icon">✓</span> Gestão de Metas e Orçamentos</li>
+                        <li><span className="check-icon">✓</span> Transações via Áudio Ilimitadas</li>
+                        <li><span className="check-icon">✓</span> Assistente IA <br></br>(Converse sobre suas finanças)</li>
+                        <li><span className="check-icon">✓</span> Gestão de faturas com parcelas Inteligentes</li>
+                    </ul>
+
+                    <button
+                        onClick={onLoginClick}
+                        style={{
+                            width: '100%',
+                            padding: '14px',
+                            background: 'var(--gold-primary)',
+                            color: 'black',
+                            fontWeight: 'bold',
+                            borderRadius: '12px',
+                            border: 'none',
+                            marginTop: '1rem',
+                            fontSize: '1rem'
+                        }}
+                    >
+                        Começar Teste Grátis
+                    </button>
+                    <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: '#666' }}>Sem compromisso. Cancele quando quiser.</p>
                 </div>
             </section>
 
