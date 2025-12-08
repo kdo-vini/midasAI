@@ -11,11 +11,40 @@
       darkMode: 'class',
       theme: {
         extend: {
+          fontFamily: {
+            'outfit': ['Outfit', 'sans-serif'],
+            'space': ['Space Grotesk', 'sans-serif'],
+            'sans': ['Outfit', 'sans-serif'], // Override default sans
+          },
           colors: {
+            // Override Slate to match Luxury Black theme
             slate: {
-              850: '#1e293b', // Custom darker slate for better contrast
-              900: '#0f172a',
-              950: '#020617',
+              50: '#f8fafc',
+              100: '#f1f5f9',
+              200: '#e2e8f0',
+              300: '#cbd5e1',
+              400: '#94a3b8',
+              500: '#64748b',
+              600: '#475569',
+              700: '#334155',
+              800: '#191919', // Card BG
+              850: '#111111', // Secondary Dark
+              900: '#050505', // Main BG
+              950: '#000000',
+            },
+            // Override Indigo to match Gold theme
+            indigo: {
+              50: 'rgba(255, 215, 0, 0.1)', // Very light gold
+              100: 'rgba(255, 215, 0, 0.2)',
+              200: '#ffeebb',
+              300: '#ffdd77',
+              400: '#ffcc33',
+              500: '#e6c200',
+              600: '#FFD700', // Gold Primary
+              700: '#b39700',
+              800: '#806b00',
+              900: '#4d4000',
+              950: '#1a1500',
             }
           }
         }
@@ -23,13 +52,16 @@
     }
   </script>
   <link rel="icon" type="image/png" href="logo.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Grotesk:wght@300;500;700&display=swap"
+    rel="stylesheet">
   <style>
     body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f8fafc;
+      font-family: 'Outfit', sans-serif;
+      background-color: #050505;
       overflow-x: hidden;
       width: 100%;
+      color: #ffffff;
     }
 
     /* Custom scrollbar for cleaner look */
@@ -38,11 +70,11 @@
     }
 
     ::-webkit-scrollbar-track {
-      background: transparent;
+      background: #050505;
     }
 
     ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
+      background: #FFD700;
       border-radius: 3px;
     }
   </style>

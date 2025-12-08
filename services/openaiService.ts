@@ -55,3 +55,32 @@ export const generateInsights = async (transactions: any[], budgetGoals: any[], 
         return language === 'pt' ? "Não foi possível gerar insights agora." : "Could not generate insights right now.";
     }
 };
+
+export const sendChatMessage = async (
+    message: string,
+    history: { role: string, content: string }[],
+    transactions: Transaction[],
+    budgetGoals: BudgetGoal[],
+    monthlyStats: MonthlyStats,
+    language: string = 'pt'
+): Promise<string> => {
+    try {
+        const { data, error } = await supabase.functions.invoke('ai-proxy', {
+            body: {
+                type: 'chat',
+                prompt: message,
+                previousMessages: history,
+                transactions,
+                budgetGoals,
+                monthlyStats,
+                language
+            }
+        });
+
+        if (error) throw error;
+        return data?.content || "No response";
+    } catch (error) {
+        console.error("Chat Error:", error);
+        throw error;
+    }
+};

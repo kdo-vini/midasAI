@@ -8,10 +8,13 @@ import { CategoryTabs } from './components/CategoryTabs';
 import { DashboardStats } from './components/DashboardStats';
 import { FixedIncomeModal } from './components/FixedIncomeModal';
 import { Login } from './components/Login';
+import { LandingPage } from './components/LandingPage';
 import { InsightsComponent } from './components/InsightsComponent';
 import { BottomNav, TabType } from './components/BottomNav';
+import { Logo } from './components/Logo';
+import { FloatingChat } from './components/FloatingChat';
 import { Transaction, TransactionType, TransactionCategory, AIParsedTransaction, RecurringTransaction, CategoryStat, BudgetGoal } from './types';
-import { Settings, BarChart3, ChevronLeft, ChevronRight, LogOut, Loader2, Moon, Sun } from 'lucide-react';
+import { Settings, ChevronLeft, ChevronRight, LogOut, Loader2, Moon, Sun } from 'lucide-react';
 import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget, updateTransaction, deleteTransactionsByRecurringId } from './services/supabase';
 import { DEFAULT_CATEGORIES } from './constants/categories';
 import { Toaster, toast } from 'sonner';
@@ -21,6 +24,7 @@ const App: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [session, setSession] = useState<any>(null);
   const [loadingSession, setLoadingSession] = useState(true);
+  const [view, setView] = useState<'landing' | 'login' | 'app'>('landing');
 
   // --- State ---
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -32,35 +36,33 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [activeCategory, setActiveCategory] = useState<TransactionCategory | 'all'>('all');
   const [darkMode, setDarkMode] = useState(() => {
+    // Force Dark Mode initialization
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') === 'dark' ||
-        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      localStorage.setItem('theme', 'dark');
+      return true;
     }
-    return false;
+    return true;
   });
 
   // --- Dark Mode Effect ---
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [darkMode]);
+    // Always enforce dark mode
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+    setDarkMode(true);
+  }, []);
 
   // --- Auth & Initial Load ---
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
         console.error("Error restoring session:", error);
-        // If the refresh token is invalid, sign out to clear bad state
         if (error.message && (error.message.includes("Refresh Token") || error.message.includes("refresh_token"))) {
           supabase.auth.signOut();
         }
       }
       setSession(session);
+      if (session) setView('app'); // Auto-route to app if logged in
       setLoadingSession(false);
     });
 
@@ -68,6 +70,8 @@ const App: React.FC = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session) setView('app');
+      else if (view === 'app') setView('landing'); // Go to landing on logout
     });
 
     return () => subscription.unsubscribe();
@@ -364,6 +368,7 @@ const App: React.FC = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    setView('landing');
     toast.success(t('toasts.loggedOut'));
   };
 
@@ -524,23 +529,7 @@ const App: React.FC = () => {
                 <ChevronRight className="w-5 h-5 text-slate-400" />
               </button>
 
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-200 dark:border-slate-700"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-400">
-                    {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                  </div>
-                  <div className="text-left">
-                    <h3 className="font-medium text-slate-900 dark:text-slate-100">{t('app.theme.label')}</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{darkMode ? t('app.theme.dark') : t('app.theme.light')}</p>
-                  </div>
-                </div>
-                <div className={`w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-full relative transition-colors ${darkMode ? 'bg-indigo-600 dark:bg-indigo-600' : ''}`}>
-                  <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${darkMode ? 'translate-x-5' : ''}`} />
-                </div>
-              </button>
+              {/* Dark Mode Toggle Removed (Forced Dark Mode) */}
 
               <button
                 onClick={handleLogout}
@@ -570,22 +559,41 @@ const App: React.FC = () => {
     return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>;
   }
 
+  // --- RENDERING VIEWS ---
+
   if (!session) {
-    return <Login />;
+    if (view === 'landing') {
+      return <LandingPage onLoginClick={() => setView('login')} />;
+    }
+    // Simple Login Wrapper with Back Button
+    return (
+      <div className="relative">
+        <Login />
+        <button
+          onClick={() => setView('landing')}
+          className="absolute top-4 left-4 p-2 bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors"
+          style={{ zIndex: 50 }}
+          aria-label="Back to landing"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+      </div>
+    );
   }
 
+  // APP VIEW
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 pb-24 md:pb-20 font-sans">
-      <Toaster position="top-center" richColors theme={darkMode ? 'dark' : 'light'} />
-      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40 shadow-sm/50 backdrop-blur-md bg-white/90 dark:bg-slate-800/90 transition-colors duration-300">
+    <div className="min-h-screen bg-slate-900 text-slate-100 pb-24 md:pb-20 font-sans">
+      <Toaster position="top-center" richColors theme="dark" />
+      <header className="bg-slate-800 border-b border-slate-700 sticky top-0 z-40 shadow-sm/50 backdrop-blur-md bg-slate-800/90 transition-colors duration-300">
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2 bg-slate-100/50 dark:bg-slate-700/50 rounded-lg p-1 border border-slate-200/60 dark:border-slate-600/60">
-              <button onClick={handlePrevMonth} className="p-1.5 hover:bg-white dark:hover:bg-slate-600 hover:shadow-sm rounded-md transition-all text-slate-500 dark:text-slate-300">
+            <div className="flex items-center gap-2 bg-slate-700/50 rounded-lg p-1 border border-slate-600/60">
+              <button onClick={handlePrevMonth} className="p-1.5 hover:bg-slate-600 hover:shadow-sm rounded-md transition-all text-slate-300">
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="font-semibold text-slate-700 dark:text-slate-200 capitalize text-sm px-2 w-28 text-center">{monthLabel}</span>
-              <button onClick={handleNextMonth} className="p-1.5 hover:bg-white dark:hover:bg-slate-600 hover:shadow-sm rounded-md transition-all text-slate-500 dark:text-slate-300">
+              <span className="font-semibold text-slate-200 capitalize text-sm px-2 w-28 text-center">{monthLabel}</span>
+              <button onClick={handleNextMonth} className="p-1.5 hover:bg-slate-600 hover:shadow-sm rounded-md transition-all text-slate-300">
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -593,32 +601,7 @@ const App: React.FC = () => {
             <div className="flex items-center gap-6">
               {/* Container do logo */}
               <div className="inline-flex items-center gap-2">
-                {/* Ícone coroa */}
-                <svg
-                  className="w-8 h-8"
-                  viewBox="0 0 64 64"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <defs>
-                    <linearGradient id="midasGradient" x1="0" y1="32" x2="64" y2="32" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stopColor="#4F46E5" />
-                      <stop offset="100%" stopColor="#8B5CF6" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d="M6 50V18L20 32L32 18L44 32L58 18V50H6Z"
-                    stroke="url(#midasGradient)"
-                    strokeWidth="5"
-                    strokeLinejoin="round"
-                    fill="none"
-                  />
-                </svg>
-
-                {/* Texto */}
-                <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-50">
-                  Midas
-                </span>
+                <Logo />
               </div>
 
 
@@ -626,19 +609,19 @@ const App: React.FC = () => {
               <nav className="hidden md:flex items-center gap-1">
                 <button
                   onClick={() => setActiveTab('home')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'home' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'home' ? 'bg-indigo-900/20 text-indigo-400' : 'text-slate-400 hover:bg-slate-800'}`}
                 >
                   {t('app.nav.home')}
                 </button>
                 <button
                   onClick={() => setActiveTab('transactions')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'transactions' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'transactions' ? 'bg-indigo-900/20 text-indigo-400' : 'text-slate-400 hover:bg-slate-800'}`}
                 >
                   {t('app.nav.transactions')}
                 </button>
                 <button
                   onClick={() => setActiveTab('reports')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'reports' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'reports' ? 'bg-indigo-900/20 text-indigo-400' : 'text-slate-400 hover:bg-slate-800'}`}
                 >
                   {t('app.nav.reports')}
                 </button>
@@ -647,16 +630,8 @@ const App: React.FC = () => {
               {/* Desktop only buttons */}
               <div className="hidden md:flex items-center gap-2">
                 <button
-                  onClick={() => setDarkMode(!darkMode)}
-                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-700 transition-all rounded-lg"
-                  title={darkMode ? t('app.theme.light') : t('app.theme.dark')}
-                >
-                  {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                </button>
-
-                <button
                   onClick={() => setIsSettingsOpen(true)}
-                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-700 transition-all rounded-lg"
+                  className="p-2 text-slate-400 hover:text-indigo-400 hover:bg-slate-700 transition-all rounded-lg"
                   title={t('app.settings.recurring.title')}
                 >
                   <Settings className="w-5 h-5" />
@@ -664,7 +639,7 @@ const App: React.FC = () => {
 
                 <button
                   onClick={handleLogout}
-                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all rounded-lg"
+                  className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-900/20 transition-all rounded-lg"
                   title={t('app.settings.logout.title')}
                 >
                   <LogOut className="w-5 h-5" />
@@ -688,6 +663,12 @@ const App: React.FC = () => {
       />
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+
+      <FloatingChat
+        transactions={currentMonthTransactions}
+        budgetGoals={budgetGoals}
+        monthlyStats={stats}
+      />
     </div>
   );
 };

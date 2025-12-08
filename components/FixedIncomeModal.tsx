@@ -65,7 +65,7 @@ export const FixedIncomeModal: React.FC<RecurringModalProps> = ({ isOpen, onClos
             <div className="space-y-3">
               <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t('fixedIncomeModal.currentItems')}</h3>
               {recurringItems.map(item => (
-                <div key={item.id} className="flex justify-between items-center bg-slate-50 dark:bg-slate-700 p-3 rounded-xl border border-slate-100 dark:border-slate-600">
+                <div key={item.id} className="flex justify-between items-center bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-100 dark:border-slate-600">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-full ${item.type === TransactionType.INCOME ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'}`}>
                       {item.type === TransactionType.INCOME ? <ArrowUpCircle className="w-4 h-4" /> : <ArrowDownCircle className="w-4 h-4" />}
@@ -93,14 +93,14 @@ export const FixedIncomeModal: React.FC<RecurringModalProps> = ({ isOpen, onClos
               <button
                 type="button"
                 onClick={() => setType(TransactionType.INCOME)}
-                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${type === TransactionType.INCOME ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200 dark:shadow-none' : 'bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600'}`}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${type === TransactionType.INCOME ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200 dark:shadow-none' : 'bg-white dark:bg-slate-850 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600'}`}
               >
                 {t('fixedIncomeModal.fixedIncome')}
               </button>
               <button
                 type="button"
                 onClick={() => setType(TransactionType.EXPENSE)}
-                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${type === TransactionType.EXPENSE ? 'bg-rose-500 text-white shadow-lg shadow-rose-200 dark:shadow-none' : 'bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600'}`}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${type === TransactionType.EXPENSE ? 'bg-rose-500 text-white shadow-lg shadow-rose-200 dark:shadow-none' : 'bg-white dark:bg-slate-850 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600'}`}
               >
                 {t('fixedIncomeModal.fixedExpense')}
               </button>
@@ -112,7 +112,7 @@ export const FixedIncomeModal: React.FC<RecurringModalProps> = ({ isOpen, onClos
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="w-full rounded-lg border-slate-200 dark:border-slate-600 p-2.5 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:outline-none placeholder-slate-400 dark:placeholder-slate-500"
+                className="w-full rounded-lg border-slate-200 dark:border-slate-600 p-2.5 bg-white dark:bg-slate-850 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:outline-none placeholder-slate-400 dark:placeholder-slate-500"
                 placeholder={type === TransactionType.INCOME ? t('fixedIncomeModal.placeholderDescIncome') : t('fixedIncomeModal.placeholderDescExpense')}
                 required
               />
@@ -126,7 +126,7 @@ export const FixedIncomeModal: React.FC<RecurringModalProps> = ({ isOpen, onClos
                   step="0.01"
                   value={amount}
                   onChange={e => setAmount(e.target.value)}
-                  className="w-full rounded-lg border-slate-200 dark:border-slate-600 p-2.5 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:outline-none placeholder-slate-400 dark:placeholder-slate-500"
+                  className="w-full rounded-lg border-slate-200 dark:border-slate-600 p-2.5 bg-white dark:bg-slate-850 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:outline-none placeholder-slate-400 dark:placeholder-slate-500"
                   placeholder="0.00"
                   required
                 />
@@ -139,7 +139,7 @@ export const FixedIncomeModal: React.FC<RecurringModalProps> = ({ isOpen, onClos
                   max="31"
                   value={day}
                   onChange={e => setDay(e.target.value)}
-                  className="w-full rounded-lg border-slate-200 dark:border-slate-600 p-2.5 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:outline-none placeholder-slate-400 dark:placeholder-slate-500"
+                  className="w-full rounded-lg border-slate-200 dark:border-slate-600 p-2.5 bg-white dark:bg-slate-850 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:outline-none placeholder-slate-400 dark:placeholder-slate-500"
                   placeholder="1-31"
                   required
                 />
@@ -151,7 +151,7 @@ export const FixedIncomeModal: React.FC<RecurringModalProps> = ({ isOpen, onClos
               <select
                 value={category}
                 onChange={e => setCategory(e.target.value)}
-                className="w-full rounded-lg border-slate-200 dark:border-slate-600 p-2.5 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:outline-none appearance-none"
+                className="w-full rounded-lg border-slate-200 dark:border-slate-600 p-2.5 bg-white dark:bg-slate-850 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:outline-none appearance-none"
                 required
               >
                 {DEFAULT_CATEGORIES.map(cat => (

@@ -30,41 +30,44 @@ export const InsightsComponent: React.FC<InsightsComponentProps> = ({ transactio
     if (transactions.length === 0) return null;
 
     return (
-        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg mb-8 relative overflow-hidden">
-            {/* Background decoration */}
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
-            <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-20 h-20 bg-black/10 rounded-full blur-xl"></div>
+        <div className="bg-[#0A0A0A] border border-[#1f1f1f] rounded-2xl p-6 shadow-sm mb-8 relative overflow-hidden group">
+            {/* Subtle Gold Glow */}
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-32 h-32 bg-[#FFD700] rounded-full blur-[80px] opacity-[0.05] group-hover:opacity-[0.08] transition-opacity duration-500 pointer-events-none"></div>
 
             <div className="relative z-10">
                 <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                        <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
-                            <Lightbulb className="w-5 h-5 text-yellow-300" />
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-[#FFD700]/10 border border-[#FFD700]/20">
+                            <Sparkles className="w-4 h-4 text-[#FFD700]" />
                         </div>
-                        <h3 className="font-bold text-lg">{t('insights.title')}</h3>
+                        <h3 className="font-space font-bold text-lg text-slate-100 tracking-tight">{t('insights.title')}</h3>
                     </div>
 
                     <button
                         onClick={handleGenerate}
                         disabled={loading}
-                        className="p-2 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50"
+                        className="p-2 text-slate-500 hover:text-[#FFD700] hover:bg-[#FFD700]/5 rounded-lg transition-all disabled:opacity-50"
                         title={t('insights.generate')}
                     >
                         <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                     </button>
                 </div>
 
-                {insight ? (
-                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/10 animate-in fade-in slide-in-from-bottom-2">
-                        <p className="text-indigo-50 font-medium leading-relaxed">
-                            "{insight}"
-                        </p>
-                    </div>
-                ) : (
-                    <div className="text-indigo-100 text-sm opacity-90">
-                        <p>{t('insights.description')}</p>
-                    </div>
-                )}
+                <div className="mt-4">
+                    {insight ? (
+                        <div className="animate-in fade-in slide-in-from-bottom-2">
+                            <div className="p-4 rounded-xl bg-[#141414] border border-[#222]">
+                                <p className="text-slate-300 font-medium leading-relaxed text-sm">
+                                    "{insight}"
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-slate-500 text-sm">
+                            <p>{t('insights.description')}</p>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

@@ -138,16 +138,16 @@ export const SmartInput: React.FC<SmartInputProps> = ({
 
       {/* AI Message Display */}
       {aiMessage && (
-        <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/30 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-          <div className="bg-indigo-100 dark:bg-indigo-800 p-1.5 rounded-lg flex-shrink-0">
-            <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-300" />
+        <div className="mb-4 p-3 bg-[#FFD700]/10 border border-[#FFD700]/30 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+          <div className="bg-[#FFD700]/20 p-1.5 rounded-lg flex-shrink-0">
+            <Sparkles className="w-4 h-4 text-[#FFD700]" />
           </div>
           <div className="flex-grow">
-            <p className="text-sm text-indigo-900 dark:text-indigo-100 leading-relaxed">{aiMessage}</p>
+            <p className="text-sm text-slate-100 leading-relaxed">{aiMessage}</p>
           </div>
           <button
             onClick={() => setAiMessage(null)}
-            className="text-indigo-400 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-200 transition-colors"
+            className="text-[#FFD700]/60 hover:text-[#FFD700] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>

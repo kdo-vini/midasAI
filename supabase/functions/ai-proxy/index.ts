@@ -12,7 +12,7 @@ serve(async (req) => {
     }
 
     try {
-        const { prompt, type, transactions, budgetGoals, availableCategories, referenceDate, language, monthlyStats } = await req.json();
+        const { prompt, type, transactions, budgetGoals, availableCategories, referenceDate, language, monthlyStats, previousMessages } = await req.json();
 
         if (!OPENAI_API_KEY) {
             throw new Error("OPENAI_API_KEY is not set");
@@ -23,32 +23,28 @@ serve(async (req) => {
         let responseFormat = null;
         const targetLang = language === 'en' ? 'English' : 'Portuguese';
 
-        if (type === 'parse') {
-            const refDate = referenceDate ? new Date(referenceDate) : new Date();
-            const currentDate = refDate.toISOString().split('T')[0];
-            const dayOfMonth = refDate.getDate();
-            const categoriesStr = availableCategories.join(", ");
+        // Build financial context if available
+        let financialContext = "";
+        if (transactions && transactions.length > 0 && budgetGoals && budgetGoals.length > 0 && monthlyStats) {
+            const dayOfMonth = referenceDate ? new Date(referenceDate).getDate() : new Date().getDate();
 
-            // Build financial context if available
-            let financialContext = "";
-            if (transactions && transactions.length > 0 && budgetGoals && budgetGoals.length > 0 && monthlyStats) {
-                // Calculate spending per category
-                const categorySpending: Record<string, number> = {};
-                transactions.forEach((t: any) => {
-                    if (t.type === 'EXPENSE') {
-                        categorySpending[t.category] = (categorySpending[t.category] || 0) + t.amount;
-                    }
-                });
+            // Calculate spending per category
+            const categorySpending: Record<string, number> = {};
+            transactions.forEach((t: any) => {
+                if (t.type === 'EXPENSE') {
+                    categorySpending[t.category] = (categorySpending[t.category] || 0) + t.amount;
+                }
+            });
 
-                // Build budget status
-                const budgetStatus = budgetGoals.map((goal: any) => {
-                    const spent = categorySpending[goal.category] || 0;
-                    const budgetAmount = (monthlyStats.totalIncome * goal.targetPercentage) / 100;
-                    const usagePercent = budgetAmount > 0 ? Math.round((spent / budgetAmount) * 100) : 0;
-                    return `${goal.category}: spent ${spent.toFixed(2)} of ${budgetAmount.toFixed(2)} budget (${usagePercent}% used)`;
-                }).join("; ");
+            // Build budget status
+            const budgetStatus = budgetGoals.map((goal: any) => {
+                const spent = categorySpending[goal.category] || 0;
+                const budgetAmount = (monthlyStats.totalIncome * goal.targetPercentage) / 100;
+                const usagePercent = budgetAmount > 0 ? Math.round((spent / budgetAmount) * 100) : 0;
+                return `${goal.category}: spent ${spent.toFixed(2)} of ${budgetAmount.toFixed(2)} budget (${usagePercent}% used)`;
+            }).join("; ");
 
-                financialContext = `
+            financialContext = `
       FINANCIAL CONTEXT (use this to answer questions about spending/budget):
       - Day of month: ${dayOfMonth} (1-10 = beginning, 11-20 = middle, 21-31 = end)
       - Total income this month: ${monthlyStats.totalIncome}
@@ -81,7 +77,13 @@ serve(async (req) => {
       CRITICAL: DO NOT approve a specific amount if it exceeds the budget, even if the current spending is 0%. Math trumps feelings.
       
       TONE: Helpful, direct, but strict on math.`;
-            }
+        }
+
+
+        if (type === 'parse') {
+            const refDate = referenceDate ? new Date(referenceDate) : new Date();
+            const currentDate = refDate.toISOString().split('T')[0];
+            const categoriesStr = availableCategories.join(", ");
 
             const systemPrompt = `
       Analyze the text. Today is ${currentDate}.
@@ -140,6 +142,50 @@ serve(async (req) => {
                 }
             };
 
+        } else if (type === 'chat') {
+            const currentDate = new Date().toISOString().split('T')[0];
+            const history = previousMessages || []; // Use destructured variable
+
+            const systemPrompt = `
+      You are Midas, a helpful and friendly financial assistant. 
+      Today is ${currentDate}.
+      Language: ${targetLang}.
+      
+      RESPONSE STYLE:
+      - **BE CONCISE**: Answer in 1-2 sentences by default. Be direct and friendly.
+      - **ONLY explain details** if the user explicitly asks "why?", "how?", "explain", or similar follow-up questions.
+      - Use simple, conversational language. Avoid jargon unless asked.
+      - Use **bold** for key numbers or amounts (e.g., **R$ 50**).
+      
+      CATEGORY MAPPING (use this to identify which budget to check):
+      - **Alimentação**: comida, doces, lanche, almoço, jantar, café, restaurante, supermercado, feira, padaria, ifood, delivery
+      - **Transporte**: uber, 99, gasolina, combustível, estacionamento, ônibus, metrô, passagem
+      - **Lazer**: cinema, netflix, spotify, viagem, festa, bar, show, jogo
+      - **Compras**: roupa, sapato, eletrônico, celular, presente, objeto, coisa (generic purchases)
+      - **Saúde**: médico, remédio, farmácia, academia, psicólogo
+      - **Moradia**: aluguel, condomínio, luz, água, gás, internet
+      - **Educação**: curso, livro, faculdade, escola
+      - If unsure which category, ASK the user: "Isso seria Alimentação ou Compras?"
+      
+      YOUR KNOWLEDGE:
+      ${financialContext}
+      
+      EXAMPLES:
+      User: "posso gastar 50 com doces?"
+      Good: "Pode sim! Você tem **R$ 238** livres em Alimentação. 👍"
+      
+      User: "posso comprar uma camisa de 100?"
+      Good: "Pode! Ainda sobram **R$ 150** em Compras."
+            `;
+
+            messages = [
+                { role: "system", content: systemPrompt },
+                ...history,
+                { role: "user", content: prompt }
+            ];
+
+            // No responseFormat needed (defaults to text)
+
         } else if (type === 'insight') {
             const insightPrompt = `
       Analyze these financial records and provide 1 single, valuable insight or tip (max 2 sentences).
@@ -158,6 +204,7 @@ serve(async (req) => {
             throw new Error("Invalid request type");
         }
 
+        // --- COMMON: Call OpenAI API ---
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
