@@ -20,6 +20,9 @@ export interface Transaction {
   transactionCategory?: TransactionCategory;
   dueDate?: string; // ISO string - quando deve ser pago
   paidDate?: string; // ISO string - quando foi marcado como pago
+
+  // Installment grouping
+  installmentGroupId?: string; // Groups installment transactions together
 }
 
 export interface RecurringTransaction {

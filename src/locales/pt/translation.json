@@ -119,7 +119,8 @@
         "recurringDeleteError": "Erro ao deletar recorrente.",
         "budgetUpdated": "Orçamento atualizado.",
         "budgetSaveError": "Erro ao salvar orçamento.",
-        "loggedOut": "Você saiu da conta."
+        "loggedOut": "Você saiu da conta.",
+        "seriesDeleted": "{{count}} parcelas removidas."
     },
     "insights": {
         "title": "Midas Insights",
@@ -153,5 +154,13 @@
         "placeholderDescIncome": "Ex: Salário, Bônus Mensal",
         "placeholderDescExpense": "Ex: Aluguel, Academia",
         "add": "Adicionar"
+    },
+    "deleteModal": {
+        "title": "Excluir transação",
+        "subtitle": "Você quer excluir",
+        "deleteSingle": "Apenas esta parcela",
+        "deleteAll": "Toda a série",
+        "deleteAllCount": "Toda a série ({{count}} parcelas)",
+        "cancel": "Cancelar"
     }
 }

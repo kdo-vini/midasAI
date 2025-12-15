@@ -34,7 +34,8 @@ export const fetchTransactions = async (userId: string) => {
         isPaid: t.is_paid,
         transactionCategory: t.transaction_category,
         dueDate: t.due_date,
-        paidDate: t.paid_date
+        paidDate: t.paid_date,
+        installmentGroupId: t.installment_group_id
     })) as Transaction[];
 };
 
@@ -54,6 +55,7 @@ export const saveTransaction = async (transaction: Transaction, userId: string) 
             transaction_category: transaction.transactionCategory,
             due_date: transaction.dueDate,
             paid_date: transaction.paidDate,
+            installment_group_id: transaction.installmentGroupId,
             user_id: userId
         }]);
 
@@ -74,7 +76,8 @@ export const updateTransaction = async (transaction: Transaction, userId: string
             is_paid: transaction.isPaid ?? false,
             transaction_category: transaction.transactionCategory,
             due_date: transaction.dueDate,
-            paid_date: transaction.paidDate
+            paid_date: transaction.paidDate,
+            installment_group_id: transaction.installmentGroupId
         })
         .eq('id', transaction.id)
         .eq('user_id', userId);
@@ -149,6 +152,15 @@ export const deleteTransactionsByRecurringId = async (recurringId: string) => {
         .from('transactions')
         .delete()
         .eq('recurring_id', recurringId);
+
+    if (error) throw error;
+};
+
+export const deleteTransactionsByInstallmentGroupId = async (groupId: string) => {
+    const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('installment_group_id', groupId);
 
     if (error) throw error;
 };

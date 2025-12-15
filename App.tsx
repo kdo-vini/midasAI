@@ -13,9 +13,10 @@ import { InsightsComponent } from './components/InsightsComponent';
 import { BottomNav, TabType } from './components/BottomNav';
 import { Logo } from './components/Logo';
 import { FloatingChat } from './components/FloatingChat';
+import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { Transaction, TransactionType, TransactionCategory, AIParsedTransaction, RecurringTransaction, CategoryStat, BudgetGoal } from './types';
 import { Settings, ChevronLeft, ChevronRight, LogOut, Loader2, Moon, Sun } from 'lucide-react';
-import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget, updateTransaction, deleteTransactionsByRecurringId } from './services/supabase';
+import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget, updateTransaction, deleteTransactionsByRecurringId, deleteTransactionsByInstallmentGroupId } from './services/supabase';
 import { DEFAULT_CATEGORIES } from './constants/categories';
 import { Toaster, toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -43,6 +44,10 @@ const App: React.FC = () => {
     }
     return true;
   });
+
+  // Delete modal state for installment transactions
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
 
   // --- Dark Mode Effect ---
   useEffect(() => {
@@ -223,6 +228,9 @@ const App: React.FC = () => {
 
     const installmentAmount = data.amount / installments;
 
+    // Generate a unique group ID for installments if there are multiple
+    const groupId = installments > 1 ? uuidv4() : undefined;
+
     for (let i = 0; i < installments; i++) {
       const date = new Date(baseDate);
       date.setMonth(baseDate.getMonth() + i);
@@ -239,7 +247,8 @@ const App: React.FC = () => {
         type: data.type === 'INCOME' ? TransactionType.INCOME : TransactionType.EXPENSE,
         date: date.toISOString(),
         isPaid: false,
-        transactionCategory: data.category === 'Economias' ? 'savings' : (data.type === 'INCOME' ? 'income' : 'variable')
+        transactionCategory: data.category === 'Economias' ? 'savings' : (data.type === 'INCOME' ? 'income' : 'variable'),
+        installmentGroupId: groupId
       });
     }
 
@@ -287,12 +296,43 @@ const App: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
+    const transaction = transactions.find(t => t.id === id);
+    if (!transaction) return;
+
+    // Check if this is part of an installment group
+    if (transaction.installmentGroupId) {
+      // Count total installments in group
+      const installmentGroup = transactions.filter(t => t.installmentGroupId === transaction.installmentGroupId);
+      const totalInstallments = installmentGroup.length;
+
+      // Show modal for user to choose
+      setTransactionToDelete(transaction);
+      setDeleteModalOpen(true);
+    } else {
+      // Single transaction - delete directly
+      await handleDeleteSingle(id);
+    }
+  };
+
+  const handleDeleteSingle = async (id: string) => {
     setTransactions(prev => prev.filter(t => t.id !== id));
     toast.success(t('toasts.transactionRemoved'), { duration: 1000 });
     try {
       await deleteTransaction(id);
     } catch (error) {
       console.error("Error deleting:", error);
+      toast.error(t('toasts.deleteError'));
+    }
+  };
+
+  const handleBulkDelete = async (groupId: string) => {
+    const installmentCount = transactions.filter(t => t.installmentGroupId === groupId).length;
+    setTransactions(prev => prev.filter(t => t.installmentGroupId !== groupId));
+    toast.success(t('toasts.seriesDeleted', { count: installmentCount }), { duration: 2000 });
+    try {
+      await deleteTransactionsByInstallmentGroupId(groupId);
+    } catch (error) {
+      console.error("Error deleting installment series:", error);
       toast.error(t('toasts.deleteError'));
     }
   };
@@ -669,6 +709,29 @@ const App: React.FC = () => {
         budgetGoals={budgetGoals}
         monthlyStats={stats}
       />
+
+      {/* Delete Confirmation Modal for Installments */}
+      {transactionToDelete && (
+        <DeleteConfirmModal
+          isOpen={deleteModalOpen}
+          onClose={() => {
+            setDeleteModalOpen(false);
+            setTransactionToDelete(null);
+          }}
+          onDeleteSingle={() => {
+            if (transactionToDelete) {
+              handleDeleteSingle(transactionToDelete.id);
+            }
+          }}
+          onDeleteAll={() => {
+            if (transactionToDelete?.installmentGroupId) {
+              handleBulkDelete(transactionToDelete.installmentGroupId);
+            }
+          }}
+          installmentInfo={transactionToDelete.description}
+          totalInstallments={transactions.filter(t => t.installmentGroupId === transactionToDelete.installmentGroupId).length}
+        />
+      )}
     </div>
   );
 };

@@ -119,7 +119,8 @@
         "recurringDeleteError": "Error deleting recurring item.",
         "budgetUpdated": "Budget updated.",
         "budgetSaveError": "Error saving budget.",
-        "loggedOut": "You have signed out."
+        "loggedOut": "You have signed out.",
+        "seriesDeleted": "{{count}} installments removed."
     },
     "insights": {
         "title": "Midas Insights",
@@ -153,5 +154,13 @@
         "placeholderDescIncome": "Ex: Salary, Monthly Bonus",
         "placeholderDescExpense": "Ex: Rent, Gym",
         "add": "Add"
+    },
+    "deleteModal": {
+        "title": "Delete transaction",
+        "subtitle": "Do you want to delete",
+        "deleteSingle": "Only this installment",
+        "deleteAll": "Entire series",
+        "deleteAllCount": "Entire series ({{count}} installments)",
+        "cancel": "Cancel"
     }
 }
