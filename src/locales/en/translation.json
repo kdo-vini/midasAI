@@ -28,7 +28,20 @@
             "logout": {
                 "title": "Sign Out",
                 "desc": "End current session"
+            },
+            "categories": {
+                "title": "Manage Categories",
+                "desc": "Customize expense categories"
             }
+        },
+        "profile": {
+            "title": "Profile",
+            "personalInfo": "Personal Information",
+            "displayName": "Display Name",
+            "displayNamePlaceholder": "How would you like to be called?",
+            "displayNameHelper": "AI will use this name to personalize responses",
+            "email": "Email",
+            "management": "Management"
         }
     },
     "login": {
@@ -49,7 +62,17 @@
         "agreeToPrivacy": "By creating an account, you agree to our ",
         "privacyPolicy": "Privacy Policy",
         "haveAccount": "Already have an account? Sign in here",
-        "needAccount": "Don't have an account? Create one now"
+        "needAccount": "Don't have an account? Create one now",
+        "signupSuccess": "Account created successfully!",
+        "loginSuccess": "Logged in successfully!",
+        "errors": {
+            "emailExists": "This email is already registered",
+            "weakPassword": "Password too weak. Use at least 6 characters",
+            "invalidCredentials": "Invalid email or password",
+            "emailNotConfirmed": "Please confirm your email before logging in",
+            "invalidEmail": "Invalid email",
+            "networkError": "Connection error. Please try again"
+        }
     },
     "smartInput": {
         "placeholder": "Type or speak: 'Spent $50 on groceries'...",
@@ -120,7 +143,15 @@
         "budgetUpdated": "Budget updated.",
         "budgetSaveError": "Error saving budget.",
         "loggedOut": "You have signed out.",
-        "seriesDeleted": "{{count}} installments removed."
+        "seriesDeleted": "{{count}} installments removed.",
+        "categoryAdded": "Category added!",
+        "categorySaveError": "Error saving category.",
+        "categoryUpdated": "Category updated!",
+        "categoryUpdateError": "Error updating category.",
+        "categoryDeleted": "Category removed!",
+        "categoryDeleteError": "Error deleting category.",
+        "profileUpdated": "Profile updated!",
+        "profileSaveError": "Error saving profile."
     },
     "insights": {
         "title": "Midas Insights",
@@ -162,5 +193,27 @@
         "deleteAll": "Entire series",
         "deleteAllCount": "Entire series ({{count}} installments)",
         "cancel": "Cancel"
+    },
+    "categoryManager": {
+        "title": "Manage Categories",
+        "addNew": "Add New Category",
+        "placeholder": "Category name...",
+        "add": "Add",
+        "yourCategories": "Your categories",
+        "default": "Default",
+        "usedIn": "Used in {{count}} transactions",
+        "edit": "Edit",
+        "delete": "Delete",
+        "save": "Save",
+        "cancel": "Cancel",
+        "close": "Close",
+        "cannotDeleteDefault": "Default categories cannot be deleted",
+        "duplicateError": "A category with this name already exists",
+        "inUseError": "This category is used in {{count}} transactions",
+        "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
+        "infoTitle": "Tips:",
+        "info1": "Default categories can be renamed but not deleted",
+        "info2": "Categories in use in transactions cannot be deleted",
+        "info3": "Add custom categories for better organization"
     }
 }

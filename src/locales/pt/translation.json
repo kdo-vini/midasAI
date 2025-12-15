@@ -28,7 +28,20 @@
             "logout": {
                 "title": "Sair da Conta",
                 "desc": "Encerrar sessão atual"
+            },
+            "categories": {
+                "title": "Gerenciar Categorias",
+                "desc": "Personalizar categorias de despesas"
             }
+        },
+        "profile": {
+            "title": "Perfil",
+            "personalInfo": "Informações Pessoais",
+            "displayName": "Nome para Exibição",
+            "displayNamePlaceholder": "Como você gostaria de ser chamado?",
+            "displayNameHelper": "A IA usará este nome para personalizar as respostas",
+            "email": "Email",
+            "management": "Gerenciamento"
         }
     },
     "login": {
@@ -49,7 +62,17 @@
         "agreeToPrivacy": "Ao criar sua conta, você concorda com nossa ",
         "privacyPolicy": "Política de Privacidade",
         "haveAccount": "Já tem uma conta? Entre aqui",
-        "needAccount": "Não tem conta? Crie uma agora"
+        "needAccount": "Não tem conta? Crie uma agora",
+        "signupSuccess": "Conta criada com sucesso!",
+        "loginSuccess": "Login realizado com sucesso!",
+        "errors": {
+            "emailExists": "Este email já está cadastrado",
+            "weakPassword": "Senha muito fraca. Use pelo menos 6 caracteres",
+            "invalidCredentials": "Email ou senha incorretos",
+            "emailNotConfirmed": "Confirme seu email antes de fazer login",
+            "invalidEmail": "Email inválido",
+            "networkError": "Erro de conexão. Tente novamente"
+        }
     },
     "smartInput": {
         "placeholder": "Digite ou fale: 'Gastei 50 reais no mercado'...",
@@ -120,7 +143,15 @@
         "budgetUpdated": "Orçamento atualizado.",
         "budgetSaveError": "Erro ao salvar orçamento.",
         "loggedOut": "Você saiu da conta.",
-        "seriesDeleted": "{{count}} parcelas removidas."
+        "seriesDeleted": "{{count}} parcelas removidas.",
+        "categoryAdded": "Categoria adicionada!",
+        "categorySaveError": "Erro ao salvar categoria.",
+        "categoryUpdated": "Categoria atualizada!",
+        "categoryUpdateError": "Erro ao atualizar categoria.",
+        "categoryDeleted": "Categoria removida!",
+        "categoryDeleteError": "Erro ao deletar categoria.",
+        "profileUpdated": "Perfil atualizado!",
+        "profileSaveError": "Erro ao salvar perfil."
     },
     "insights": {
         "title": "Midas Insights",
@@ -162,5 +193,27 @@
         "deleteAll": "Toda a série",
         "deleteAllCount": "Toda a série ({{count}} parcelas)",
         "cancel": "Cancelar"
+    },
+    "categoryManager": {
+        "title": "Gerenciar Categorias",
+        "addNew": "Adicionar Nova Categoria",
+        "placeholder": "Nome da categoria...",
+        "add": "Adicionar",
+        "yourCategories": "Suas categorias",
+        "default": "Padrão",
+        "usedIn": "Usada em {{count}} transações",
+        "edit": "Editar",
+        "delete": "Deletar",
+        "save": "Salvar",
+        "cancel": "Cancelar",
+        "close": "Fechar",
+        "cannotDeleteDefault": "Categorias padrão não podem ser deletadas",
+        "duplicateError": "Já existe uma categoria com este nome",
+        "inUseError": "Esta categoria está sendo usada em {{count}} transações",
+        "deleteConfirm": "Tem certeza que deseja deletar \"{{name}}\"?",
+        "infoTitle": "Dicas:",
+        "info1": "Categorias padrão podem ser renomeadas mas não deletadas",
+        "info2": "Categorias em uso em transações não podem ser deletadas",
+        "info3": "Adicione categorias personalizadas para melhor organização"
     }
 }

@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { Transaction, RecurringTransaction, BudgetGoal } from '../types';
+import { Transaction, RecurringTransaction, BudgetGoal, UserCategory, UserProfile } from '../types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -189,6 +189,81 @@ export const saveBudget = async (budget: BudgetGoal, userId: string) => {
             target_percentage: budget.targetPercentage,
             user_id: userId
         }], { onConflict: 'user_id, category' });
+
+    if (error) throw error;
+};
+
+// --- User Categories Functions ---
+
+export const fetchUserCategories = async (userId: string) => {
+    const { data, error } = await supabase
+        .from('user_categories')
+        .select('*')
+        .eq('user_id', userId)
+        .order('name');
+
+    if (error) throw error;
+
+    return data.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        isDefault: c.is_default
+    })) as UserCategory[];
+};
+
+export const saveUserCategory = async (name: string, userId: string) => {
+    const { error } = await supabase
+        .from('user_categories')
+        .insert([{ name, user_id: userId, is_default: false }]);
+
+    if (error) throw error;
+};
+
+export const updateUserCategory = async (id: string, name: string, userId: string) => {
+    const { error } = await supabase
+        .from('user_categories')
+        .update({ name })
+        .eq('id', id)
+        .eq('user_id', userId);
+
+    if (error) throw error;
+};
+
+export const deleteUserCategory = async (id: string) => {
+    const { error } = await supabase
+        .from('user_categories')
+        .delete()
+        .eq('id', id);
+
+    if (error) throw error;
+};
+
+// --- User Profile Functions ---
+
+export const fetchUserProfile = async (userId: string) => {
+    const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+
+    if (!data) return null;
+
+    return {
+        userId: data.user_id,
+        displayName: data.display_name
+    } as UserProfile;
+};
+
+export const saveUserProfile = async (profile: UserProfile) => {
+    const { error } = await supabase
+        .from('user_profiles')
+        .upsert([{
+            user_id: profile.userId,
+            display_name: profile.displayName
+        }], { onConflict: 'user_id' });
 
     if (error) throw error;
 };

@@ -14,9 +14,10 @@ import { BottomNav, TabType } from './components/BottomNav';
 import { Logo } from './components/Logo';
 import { FloatingChat } from './components/FloatingChat';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
-import { Transaction, TransactionType, TransactionCategory, AIParsedTransaction, RecurringTransaction, CategoryStat, BudgetGoal } from './types';
+import { CategoryManager } from './components/CategoryManager';
+import { Transaction, TransactionType, TransactionCategory, AIParsedTransaction, RecurringTransaction, CategoryStat, BudgetGoal, UserCategory, UserProfile } from './types';
 import { Settings, ChevronLeft, ChevronRight, LogOut, Loader2, Moon, Sun } from 'lucide-react';
-import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget, updateTransaction, deleteTransactionsByRecurringId, deleteTransactionsByInstallmentGroupId } from './services/supabase';
+import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget, updateTransaction, deleteTransactionsByRecurringId, deleteTransactionsByInstallmentGroupId, fetchUserCategories, saveUserCategory, updateUserCategory, deleteUserCategory, fetchUserProfile, saveUserProfile } from './services/supabase';
 import { DEFAULT_CATEGORIES } from './constants/categories';
 import { Toaster, toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -48,6 +49,13 @@ const App: React.FC = () => {
   // Delete modal state for installment transactions
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+
+  // Category management state
+  const [userCategories, setUserCategories] = useState<UserCategory[]>([]);
+  const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
+
+  // User profile state
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   // --- Dark Mode Effect ---
   useEffect(() => {
@@ -92,14 +100,18 @@ const App: React.FC = () => {
   const loadData = async (userId: string) => {
     setIsLoadingData(true);
     try {
-      const [txs, recs, budgets] = await Promise.all([
+      const [txs, recs, budgets, categories, profile] = await Promise.all([
         fetchTransactions(userId),
         fetchRecurring(userId),
-        fetchBudgets(userId)
+        fetchBudgets(userId),
+        fetchUserCategories(userId),
+        fetchUserProfile(userId)
       ]);
       setTransactions(txs || []);
       setRecurringItems(recs || []);
       setBudgetGoals(budgets || []);
+      setUserCategories(categories || []);
+      setUserProfile(profile || { userId, displayName: null });
     } catch (error) {
       console.error("Error loading data:", error);
       toast.error(t('toasts.loadError'));
@@ -412,6 +424,58 @@ const App: React.FC = () => {
     toast.success(t('toasts.loggedOut'));
   };
 
+  // --- Category Management Handlers ---
+  const handleAddCategory = async (name: string) => {
+    if (!session?.user) return;
+    try {
+      await saveUserCategory(name, session.user.id);
+      const categories = await fetchUserCategories(session.user.id);
+      setUserCategories(categories);
+      toast.success(t('toasts.categoryAdded'));
+    } catch (error) {
+      console.error("Error adding category:", error);
+      toast.error(t('toasts.categorySaveError'));
+    }
+  };
+
+  const handleUpdateCategory = async (id: string, name: string) => {
+    if (!session?.user) return;
+    try {
+      await updateUserCategory(id, name, session.user.id);
+      const categories = await fetchUserCategories(session.user.id);
+      setUserCategories(categories);
+      toast.success(t('toasts.categoryUpdated'));
+    } catch (error) {
+      console.error("Error updating category:", error);
+      toast.error(t('toasts.categoryUpdateError'));
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      await deleteUserCategory(id);
+      setUserCategories(prev => prev.filter(c => c.id !== id));
+      toast.success(t('toasts.categoryDeleted'));
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast.error(t('toasts.categoryDeleteError'));
+    }
+  };
+
+  // --- Profile Management ---
+  const handleSaveProfile = async (displayName: string) => {
+    if (!session?.user) return;
+    try {
+      const profile = { userId: session.user.id, displayName };
+      await saveUserProfile(profile);
+      setUserProfile(profile);
+      toast.success(t('toasts.profileUpdated'));
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      toast.error(t('toasts.profileSaveError'));
+    }
+  };
+
   const stats = useMemo(() => {
     const income = currentMonthTransactions
       .filter(t => t.type === TransactionType.INCOME)
@@ -448,6 +512,9 @@ const App: React.FC = () => {
 
   const monthLabel = new Intl.DateTimeFormat(i18n.language, { month: 'long', year: 'numeric' }).format(currentDate);
 
+  // Get category names from user categories
+  const categoryNames = useMemo(() => userCategories.map(c => c.name), [userCategories]);
+
   const renderContent = () => {
     switch (activeTab) {
       case 'home':
@@ -455,7 +522,7 @@ const App: React.FC = () => {
           <div className="space-y-6 animate-in fade-in duration-300">
             <SmartInput
               onTransactionParsed={handleAITransaction}
-              categories={DEFAULT_CATEGORIES}
+              categories={categoryNames.length > 0 ? categoryNames : DEFAULT_CATEGORIES}
               currentDate={currentDate}
               transactions={currentMonthTransactions}
               budgetGoals={budgetGoals}
@@ -550,27 +617,84 @@ const App: React.FC = () => {
       case 'settings':
         return (
           <div className="space-y-6 animate-in fade-in duration-300">
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">{t('app.settings.title')}</h2>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('app.profile.title')}</h2>
 
+            {/* Profile Info Section */}
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">{t('app.profile.personalInfo')}</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    {t('app.profile.displayName')}
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={userProfile?.displayName || ''}
+                      onChange={(e) => setUserProfile(prev => prev ? { ...prev, displayName: e.target.value } : null)}
+                      placeholder={t('app.profile.displayNamePlaceholder')}
+                      className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                    <button
+                      onClick={() => userProfile?.displayName && handleSaveProfile(userProfile.displayName)}
+                      disabled={!userProfile?.displayName?.trim()}
+                      className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
+                    >
+                      {t('app.save')}
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">{t('app.profile.displayNameHelper')}</p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    <span className="font-medium">{t('app.profile.email')}:</span> {session?.user?.email}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Management Options */}
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+              <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t('app.profile.management')}</h3>
+              </div>
+
+              <button
+                onClick={() => setIsCategoryManagerOpen(true)}
+                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-200 dark:border-slate-700"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg text-green-600 dark:text-green-400">
+                    <Settings className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <h4 className="font-medium text-slate-900 dark:text-slate-100">{t('app.settings.categories.title')}</h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{t('app.settings.categories.desc')}</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-slate-400" />
+              </button>
+
               <button
                 onClick={() => setIsSettingsOpen(true)}
-                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-200 dark:border-slate-700"
+                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
                     <Settings className="w-5 h-5" />
                   </div>
                   <div className="text-left">
-                    <h3 className="font-medium text-slate-900 dark:text-slate-100">{t('app.settings.recurring.title')}</h3>
+                    <h4 className="font-medium text-slate-900 dark:text-slate-100">{t('app.settings.recurring.title')}</h4>
                     <p className="text-sm text-slate-500 dark:text-slate-400">{t('app.settings.recurring.desc')}</p>
                   </div>
                 </div>
                 <ChevronRight className="w-5 h-5 text-slate-400" />
               </button>
+            </div>
 
-              {/* Dark Mode Toggle Removed (Forced Dark Mode) */}
-
+            {/* Logout Section */}
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center justify-between p-4 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
@@ -580,7 +704,7 @@ const App: React.FC = () => {
                     <LogOut className="w-5 h-5" />
                   </div>
                   <div className="text-left">
-                    <h3 className="font-medium text-red-600 dark:text-red-400">{t('app.settings.logout.title')}</h3>
+                    <h4 className="font-medium text-red-600 dark:text-red-400">{t('app.settings.logout.title')}</h4>
                     <p className="text-sm text-red-400/70">{t('app.settings.logout.desc')}</p>
                   </div>
                 </div>
@@ -592,6 +716,7 @@ const App: React.FC = () => {
             </div>
           </div>
         );
+
     }
   };
 
@@ -670,9 +795,9 @@ const App: React.FC = () => {
               {/* Desktop only buttons */}
               <div className="hidden md:flex items-center gap-2">
                 <button
-                  onClick={() => setIsSettingsOpen(true)}
+                  onClick={() => setActiveTab('settings')}
                   className="p-2 text-slate-400 hover:text-indigo-400 hover:bg-slate-700 transition-all rounded-lg"
-                  title={t('app.settings.recurring.title')}
+                  title={t('app.profile.title')}
                 >
                   <Settings className="w-5 h-5" />
                 </button>
@@ -732,6 +857,17 @@ const App: React.FC = () => {
           totalInstallments={transactions.filter(t => t.installmentGroupId === transactionToDelete.installmentGroupId).length}
         />
       )}
+
+      {/* Category Manager Modal */}
+      <CategoryManager
+        isOpen={isCategoryManagerOpen}
+        onClose={() => setIsCategoryManagerOpen(false)}
+        categories={userCategories}
+        onAdd={handleAddCategory}
+        onUpdate={handleUpdateCategory}
+        onDelete={handleDeleteCategory}
+        transactions={transactions}
+      />
     </div>
   );
 };

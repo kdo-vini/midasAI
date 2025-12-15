@@ -1,0 +1,236 @@
+import React, { useState } from 'react';
+import { X, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { UserCategory } from '../types';
+import { Transaction } from '../types';
+
+interface CategoryManagerProps {
+    isOpen: boolean;
+    onClose: () => void;
+    categories: UserCategory[];
+    onAdd: (name: string) => void;
+    onUpdate: (id: string, name: string) => void;
+    onDelete: (id: string) => void;
+    transactions: Transaction[];
+}
+
+export const CategoryManager: React.FC<CategoryManagerProps> = ({
+    isOpen,
+    onClose,
+    categories,
+    onAdd,
+    onUpdate,
+    onDelete,
+    transactions
+}) => {
+    const { t } = useTranslation();
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editingName, setEditingName] = useState('');
+
+    if (!isOpen) return null;
+
+    const getCategoryUsageCount = (categoryName: string) => {
+        return transactions.filter(t => t.category === categoryName).length;
+    };
+
+    const handleAdd = () => {
+        if (!newCategoryName.trim()) return;
+
+        // Check for duplicates
+        if (categories.some(c => c.name.toLowerCase() === newCategoryName.trim().toLowerCase())) {
+            alert(t('categoryManager.duplicateError'));
+            return;
+        }
+
+        onAdd(newCategoryName.trim());
+        setNewCategoryName('');
+    };
+
+    const handleUpdate = (id: string) => {
+        if (!editingName.trim()) return;
+
+        // Check for duplicates (excluding current category)
+        if (categories.some(c => c.id !== id && c.name.toLowerCase() === editingName.trim().toLowerCase())) {
+            alert(t('categoryManager.duplicateError'));
+            return;
+        }
+
+        onUpdate(id, editingName.trim());
+        setEditingId(null);
+        setEditingName('');
+    };
+
+    const handleDelete = (id: string, name: string) => {
+        const usageCount = getCategoryUsageCount(name);
+
+        if (usageCount > 0) {
+            alert(t('categoryManager.inUseError', { count: usageCount }));
+            return;
+        }
+
+        if (confirm(t('categoryManager.deleteConfirm', { name }))) {
+            onDelete(id);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+                    <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                        {t('categoryManager.title')}
+                    </h2>
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    >
+                        <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                    </button>
+                </div>
+
+                {/* Body - Scrollable */}
+                <div className="flex-1 overflow-y-auto p-6">
+                    {/* Add New Category */}
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            {t('categoryManager.addNew')}
+                        </label>
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={newCategoryName}
+                                onChange={(e) => setNewCategoryName(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
+                                placeholder={t('categoryManager.placeholder')}
+                                className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            />
+                            <button
+                                onClick={handleAdd}
+                                disabled={!newCategoryName.trim()}
+                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center gap-2"
+                            >
+                                <Plus className="w-4 h-4" />
+                                {t('categoryManager.add')}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Categories List */}
+                    <div>
+                        <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                            {t('categoryManager.your categories')} ({categories.length})
+                        </h3>
+                        <div className="space-y-2">
+                            {categories.map(category => {
+                                const usageCount = getCategoryUsageCount(category.name);
+                                const isEditing = editingId === category.id;
+
+                                return (
+                                    <div
+                                        key={category.id}
+                                        className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600"
+                                    >
+                                        {isEditing ? (
+                                            <>
+                                                <input
+                                                    type="text"
+                                                    value={editingName}
+                                                    onChange={(e) => setEditingName(e.target.value)}
+                                                    onKeyPress={(e) => e.key === 'Enter' && handleUpdate(category.id)}
+                                                    className="flex-1 px-3 py-1 border border-indigo-300 dark:border-indigo-600 rounded bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"
+                                                    autoFocus
+                                                />
+                                                <button
+                                                    onClick={() => handleUpdate(category.id)}
+                                                    className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm"
+                                                >
+                                                    {t('categoryManager.save')}
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setEditingId(null);
+                                                        setEditingName('');
+                                                    }}
+                                                    className="px-3 py-1 bg-slate-400 hover:bg-slate-500 text-white rounded text-sm"
+                                                >
+                                                    {t('categoryManager.cancel')}
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-medium text-slate-900 dark:text-slate-100">
+                                                            {category.name}
+                                                        </span>
+                                                        {category.isDefault && (
+                                                            <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded">
+                                                                {t('categoryManager.default')}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {usageCount > 0 && (
+                                                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                                                            {t('categoryManager.usedIn', { count: usageCount })}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <button
+                                                    onClick={() => {
+                                                        setEditingId(category.id);
+                                                        setEditingName(category.name);
+                                                    }}
+                                                    className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded transition-colors"
+                                                    title={t('categoryManager.edit')}
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                </button>
+
+                                                <button
+                                                    onClick={() => handleDelete(category.id, category.name)}
+                                                    disabled={category.isDefault}
+                                                    className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                                    title={category.isDefault ? t('categoryManager.cannotDeleteDefault') : t('categoryManager.delete')}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Info Box */}
+                    <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div className="flex gap-3">
+                            <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                            <div className="text-sm text-blue-800 dark:text-blue-200">
+                                <p className="font-medium mb-1">{t('categoryManager.infoTitle')}</p>
+                                <ul className="list-disc list-inside space-y-1 text-blue-700 dark:text-blue-300">
+                                    <li>{t('categoryManager.info1')}</li>
+                                    <li>{t('categoryManager.info2')}</li>
+                                    <li>{t('categoryManager.info3')}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 rounded-b-xl">
+                    <button
+                        onClick={onClose}
+                        className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium"
+                    >
+                        {t('categoryManager.close')}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};

@@ -52,6 +52,17 @@ export interface BudgetGoal {
   targetPercentage: number;
 }
 
+export interface UserCategory {
+  id: string;
+  name: string;
+  isDefault: boolean;
+}
+
+export interface UserProfile {
+  userId: string;
+  displayName: string | null;
+}
+
 // AI Response Structure
 export interface AIParsedTransaction {
   isTransaction: boolean; // True if valid financial data, False if "I am 5 years old"

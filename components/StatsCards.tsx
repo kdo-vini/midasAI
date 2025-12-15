@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Target, Edit2, Check, PieChart } from 'lucide-react';
+import { Target, Edit2, Check, PieChart, TrendingDown, Wallet } from 'lucide-react';
 import { MonthlyStats, CategoryStat, TransactionType, BudgetGoal } from '../types';
 import { useTranslation } from 'react-i18next';
 
@@ -21,12 +21,12 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
             currency: i18n.language === 'pt' ? 'BRL' : 'USD'
         }).format(val);
 
-    // Filter expense categories
+    // Filter expense categories with actual spending
     const expenseCategories = categoryStats
-        .filter(c => c.type === TransactionType.EXPENSE)
+        .filter(c => c.type === TransactionType.EXPENSE && c.amount > 0)
         .sort((a, b) => b.amount - a.amount);
 
-    // Combine actual stats with budget goals
+    // Budget report - only categories with actual spending
     const budgetReport = budgetGoals.map(goal => {
         const actual = categoryStats.find(c => c.category === goal.category)?.amount || 0;
         const budgetAmount = (stats.totalIncome * goal.targetPercentage) / 100;
@@ -41,10 +41,9 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
             remaining,
             usagePercent
         };
-    }).filter(item => item.budgetAmount > 0 || item.actualAmount > 0);
-
-    // Sort by highest budget allocation
-    budgetReport.sort((a, b) => b.targetPercent - a.targetPercent);
+    })
+        .filter(item => item.actualAmount > 0) // Only show categories with actual spending
+        .sort((a, b) => b.actualAmount - a.actualAmount);
 
     const startEdit = (cat: string, current: number) => {
         setEditingCategory(cat);
@@ -60,165 +59,183 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
     };
 
     if (categoryStats.length === 0 && stats.totalIncome === 0) {
-        return null; // Don't show report if no data
+        return null;
     }
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200 dark:border-slate-700 mt-10 transition-colors duration-300">
-            <div className="flex items-center gap-3 mb-8 border-b border-slate-100 dark:border-slate-700 pb-4">
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center gap-3 pb-4 border-b border-slate-200 dark:border-slate-700">
                 <div className="bg-indigo-100 dark:bg-indigo-900/30 p-2 rounded-lg">
                     <PieChart className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 </div>
-                <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">{t('reports.monthlyReport')}</h3>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t('reports.monthlyReport')}</h3>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-2xl p-5 border border-red-200 dark:border-red-800">
+                    <div className="flex items-center gap-3 mb-2">
+                        <TrendingDown className="w-5 h-5 text-red-600 dark:text-red-400" />
+                        <span className="text-sm font-medium text-red-700 dark:text-red-300">{t('reports.totalExpenses')}</span>
+                    </div>
+                    <p className="text-3xl font-bold text-red-900 dark:text-red-100">{formatCurrency(stats.totalExpense)}</p>
+                </div>
 
-                {/* Left: Distribution Chart */}
-                <div className="lg:col-span-4 space-y-6">
-                    <h4 className="text-slate-400 dark:text-slate-500 font-bold uppercase text-xs tracking-wider mb-4">{t('reports.expenseDistribution')}</h4>
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-2xl p-5 border border-emerald-200 dark:border-emerald-800">
+                    <div className="flex items-center gap-3 mb-2">
+                        <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{t('reports.savings')}</span>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                        <p className={`text-3xl font-bold ${stats.balance >= 0 ? 'text-emerald-900 dark:text-emerald-100' : 'text-red-900 dark:text-red-100'}`}>
+                            {stats.totalIncome > 0 ? Math.round((stats.balance / stats.totalIncome * 100)) : 0}%
+                        </p>
+                        <span className="text-sm text-emerald-600 dark:text-emerald-400">
+                            {formatCurrency(stats.balance)}
+                        </span>
+                    </div>
+                </div>
+            </div>
 
-                    {expenseCategories.length === 0 ? (
-                        <p className="text-slate-400 dark:text-slate-500 text-sm italic">{t('reports.noExpenses')}</p>
-                    ) : (
-                        <div className="space-y-5">
-                            {expenseCategories.slice(0, 6).map((cat) => (
-                                <div key={cat.category} className="group">
-                                    <div className="flex justify-between text-xs mb-2">
-                                        <span className="text-slate-600 dark:text-slate-300 font-semibold">{cat.category}</span>
-                                        <span className="text-slate-900 dark:text-slate-100 font-bold">{Math.round(cat.percentage)}%</span>
-                                    </div>
-                                    <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
-                                        <div
-                                            className="bg-indigo-500 dark:bg-indigo-400 h-full rounded-full transition-all duration-700 group-hover:bg-indigo-600 dark:group-hover:bg-indigo-300"
-                                            style={{ width: `${cat.percentage}%` }}
-                                        ></div>
+            {/* Expense Distribution */}
+            {expenseCategories.length > 0 && (
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                    <h4 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">
+                        {t('reports.expenseDistribution')}
+                    </h4>
+                    <div className="space-y-4">
+                        {expenseCategories.map((cat) => (
+                            <div key={cat.category}>
+                                <div className="flex justify-between items-baseline mb-2">
+                                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{cat.category}</span>
+                                    <div className="flex items-baseline gap-3">
+                                        <span className="text-sm text-slate-500 dark:text-slate-400">{formatCurrency(cat.amount)}</span>
+                                        <span className="text-base font-bold text-slate-900 dark:text-slate-100">{Math.round(cat.percentage)}%</span>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    )}
-
-                    <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700">
-                        <div className="flex justify-between items-end">
-                            <div>
-                                <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold uppercase mb-1">{t('reports.totalExpenses')}</p>
-                                <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{formatCurrency(stats.totalExpense)}</p>
+                                <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                                    <div
+                                        className="bg-gradient-to-r from-indigo-500 to-indigo-400 h-full rounded-full transition-all duration-700"
+                                        style={{ width: `${cat.percentage}%` }}
+                                    />
+                                </div>
                             </div>
-                            <div className="text-right">
-                                <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold uppercase mb-1">{t('reports.savings')}</p>
-                                <p className={`text-xl font-bold ${stats.balance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                                    {stats.totalIncome > 0 ? Math.round((stats.balance / stats.totalIncome * 100)) : 0}%
-                                </p>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
+            )}
 
-                {/* Middle: Detailed Summary Table */}
-                <div className="lg:col-span-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-1 border border-slate-100 dark:border-slate-700">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead>
-                                <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500">
-                                    <th className="p-4 font-semibold text-xs uppercase tracking-wider">{t('reports.table.category')}</th>
-                                    <th className="p-4 font-semibold text-xs uppercase tracking-wider text-right">{t('reports.table.goal')}</th>
-                                    <th className="p-4 font-semibold text-xs uppercase tracking-wider text-right">{t('reports.table.actual')}</th>
-                                    <th className="p-4 font-semibold text-xs uppercase tracking-wider text-center">{t('reports.table.status')}</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                                {budgetReport.map((row) => (
-                                    <tr key={row.category} className="hover:bg-white dark:hover:bg-slate-700 transition-colors">
-                                        <td className="p-4 font-medium text-slate-700 dark:text-slate-200">{row.category}</td>
-                                        <td className="p-4 text-right text-slate-500 dark:text-slate-400">{formatCurrency(row.budgetAmount)}</td>
-                                        <td className="p-4 text-right font-bold text-slate-800 dark:text-slate-100">{formatCurrency(row.actualAmount)}</td>
-                                        <td className="p-4 flex items-center justify-center">
-                                            <div className={`text-[10px] font-bold px-2 py-1 rounded-full border ${row.usagePercent > 100 ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-100 dark:border-rose-900/30 text-rose-600 dark:text-rose-400' :
-                                                row.usagePercent > 80 ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-900/30 text-amber-600 dark:text-amber-400' :
-                                                    'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400'
-                                                }`}>
-                                                {Math.round(row.usagePercent)}%
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {budgetReport.length === 0 && (
-                                    <tr>
-                                        <td colSpan={4} className="p-8 text-center text-slate-400 dark:text-slate-500 italic">
-                                            {t('reports.emptyState')}
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                {/* Right: Goals Management */}
-                <div className="lg:col-span-3 pl-0 lg:pl-6 border-l border-transparent lg:border-slate-100 dark:lg:border-slate-700">
-                    <div className="flex items-center gap-2 mb-6">
+            {/* Budget vs Actual Cards */}
+            {budgetReport.length > 0 && (
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center gap-2 mb-5">
                         <Target className="w-4 h-4 text-orange-500" />
-                        <h4 className="text-slate-800 dark:text-slate-200 font-bold uppercase text-xs tracking-wider">{t('reports.budgetGoals')}</h4>
+                        <h4 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            {t('reports.budgetGoals')}
+                        </h4>
                     </div>
 
-                    <div className="space-y-1">
-                        {budgetGoals.map((goal) => (
-                            <div key={goal.category} className="flex items-center justify-between py-2 px-2 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg group transition-colors">
-                                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{goal.category}</span>
-
-                                {editingCategory === goal.category ? (
-                                    <div className="flex items-center gap-1">
-                                        <input
-                                            type="number"
-                                            value={tempPercent}
-                                            onChange={(e) => setTempPercent(e.target.value)}
-                                            className="w-14 bg-white dark:bg-slate-600 border border-indigo-300 dark:border-indigo-500 text-indigo-600 dark:text-indigo-300 font-bold text-right text-sm rounded p-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                            autoFocus
-                                        />
-                                        <button
-                                            onClick={() => saveEdit(goal.category)}
-                                            className="p-1 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded"
-                                        >
-                                            <Check className="w-4 h-4" />
-                                        </button>
+                    <div className="space-y-4">
+                        {budgetReport.map((row) => (
+                            <div key={row.category} className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 border border-slate-200 dark:border-slate-600">
+                                {/* Category name and status */}
+                                <div className="flex items-center justify-between mb-3">
+                                    <h5 className="font-semibold text-slate-900 dark:text-slate-100">{row.category}</h5>
+                                    <div className={`text-xs font-bold px-2.5 py-1 rounded-full ${row.usagePercent > 100 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
+                                            row.usagePercent > 80 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' :
+                                                'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                                        }`}>
+                                        {Math.round(row.usagePercent)}%
                                     </div>
-                                ) : (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{goal.targetPercentage}%</span>
+                                </div>
+
+                                {/* Progress bar */}
+                                <div className="mb-3">
+                                    <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2 overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-500 ${row.usagePercent > 100 ? 'bg-red-500' :
+                                                    row.usagePercent > 80 ? 'bg-amber-500' :
+                                                        'bg-emerald-500'
+                                                }`}
+                                            style={{ width: `${Math.min(row.usagePercent, 100)}%` }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Amounts */}
+                                <div className="flex justify-between text-sm">
+                                    <div>
+                                        <span className="text-slate-500 dark:text-slate-400">{t('reports.table.actual')}: </span>
+                                        <span className="font-bold text-slate-900 dark:text-slate-100">{formatCurrency(row.actualAmount)}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-slate-500 dark:text-slate-400">{t('reports.table.goal')}: </span>
+                                        <span className="font-medium text-slate-700 dark:text-slate-300">{formatCurrency(row.budgetAmount)}</span>
+                                    </div>
+                                </div>
+
+                                {/* Edit goal percentage */}
+                                <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-600">
+                                    {editingCategory === row.category ? (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs text-slate-600 dark:text-slate-400">Meta:</span>
+                                            <input
+                                                type="number"
+                                                value={tempPercent}
+                                                onChange={(e) => setTempPercent(e.target.value)}
+                                                className="w-16 bg-white dark:bg-slate-600 border border-indigo-300 dark:border-indigo-500 text-indigo-600 dark:text-indigo-300 font-bold text-sm rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                autoFocus
+                                            />
+                                            <span className="text-xs text-slate-600 dark:text-slate-400">%</span>
+                                            <button
+                                                onClick={() => saveEdit(row.category)}
+                                                className="ml-auto p-1.5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded transition-colors"
+                                            >
+                                                <Check className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ) : (
                                         <button
-                                            onClick={() => startEdit(goal.category, goal.targetPercentage)}
-                                            className="p-1 text-slate-300 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-all"
+                                            onClick={() => startEdit(row.category, row.targetPercent)}
+                                            className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                                         >
+                                            <span>Meta: {row.targetPercent}% da renda</span>
                                             <Edit2 className="w-3 h-3" />
                                         </button>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>
 
-                    <div className="mt-8 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
+                    {/* Total planned */}
+                    <div className="mt-6 p-4 bg-slate-100 dark:bg-slate-700/50 rounded-xl">
                         <div className="flex justify-between items-center mb-2">
-                            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('reports.totalPlanned')}</span>
-                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                            <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">{t('reports.totalPlanned')}</span>
+                            <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
                                 {budgetGoals.reduce((acc, curr) => acc + curr.targetPercentage, 0)}%
                             </span>
                         </div>
-                        <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2">
+                        <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2.5">
                             <div
                                 className={`h-full rounded-full transition-all duration-500 ${budgetGoals.reduce((acc, curr) => acc + curr.targetPercentage, 0) > 100 ? 'bg-red-500' : 'bg-emerald-500'
                                     }`}
                                 style={{ width: `${Math.min(budgetGoals.reduce((acc, curr) => acc + curr.targetPercentage, 0), 100)}%` }}
-                            ></div>
+                            />
                         </div>
                         {budgetGoals.reduce((acc, curr) => acc + curr.targetPercentage, 0) > 100 && (
-                            <p className="text-[10px] text-red-500 mt-2 font-medium">{t('reports.budgetExceeded')}</p>
+                            <p className="text-xs text-red-600 dark:text-red-400 mt-2 font-medium">{t('reports.budgetExceeded')}</p>
                         )}
                     </div>
                 </div>
+            )}
 
-            </div>
+            {budgetReport.length === 0 && expenseCategories.length === 0 && (
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-12 border border-slate-200 dark:border-slate-700 text-center">
+                    <p className="text-slate-400 dark:text-slate-500 italic">{t('reports.emptyState')}</p>
+                </div>
+            )}
         </div>
     );
 };
