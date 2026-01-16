@@ -101,7 +101,9 @@ serve(async (req) => {
            - "300 no crédito em 3x" -> amount: 300, installments: 3.
            If found, set "installments" to that integer. Default is 1.
          - CATEGORY MATCHING: Map to one of: [${categoriesStr}].
-           * SPECIAL RULE: If text contains "guardar", "investir", "poupança", "reserva", "aplicação", map to "Economias".
+                       * SPECIAL RULE (Income): If the transaction is of type INCOME, default to "Receitas" if no other specific category fits better.
+            * KEYWORDS for "Receitas": salário, pagamento, recebimento, presente, gift, pix recebido, venda, reembolso, lucro, bônus, extra.
+            * SPECIAL RULE (Savings): If text contains "guardar", "investir", "poupança", "reserva", "aplicação", map to "Economias".
          - "message": A short, friendly confirmation in ${targetLang}. If installments > 1, mention it.
   
       3. IF NOT TRANSACTION (isTransaction: false):
@@ -165,6 +167,7 @@ serve(async (req) => {
       - **Saúde**: médico, remédio, farmácia, academia, psicólogo
       - **Moradia**: aluguel, condomínio, luz, água, gás, internet
       - **Educação**: curso, livro, faculdade, escola
+      - **Receitas**: salário, pagamento, recebimento, presente, gift, pix recebido, venda, reembolso, lucro, bônus, extra
       - If unsure which category, ASK the user: "Isso seria Alimentação ou Compras?"
       
       YOUR KNOWLEDGE:
