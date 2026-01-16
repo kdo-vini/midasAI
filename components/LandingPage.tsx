@@ -214,6 +214,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         <h3>Guardião de Metas</h3>
                         <p style={{ color: '#aaa' }}>Ele analisa seus hábitos e avisa gentilmente quando você está prestes a sair da linha.</p>
                     </div>
+                    <div className="feature-card" style={{ borderColor: '#10b981' }}>
+                        <div className="feature-icon">📊</div>
+                        <h3 style={{ color: '#10b981' }}>Importar Extratos</h3>
+                        <p style={{ color: '#aaa' }}>Envie seu extrato bancário (CSV/Excel) e a IA categoriza automaticamente todos os gastos com gráficos e relatórios detalhados.</p>
+                    </div>
                 </div>
             </section>
 
@@ -251,6 +256,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                         <li><span className="check-icon">✓</span> Transações via Áudio Ilimitadas</li>
                         <li><span className="check-icon">✓</span> Assistente IA <br></br>(Converse sobre suas finanças)</li>
                         <li><span className="check-icon">✓</span> Gestão de faturas com parcelas Inteligentes</li>
+                        <li><span className="check-icon" style={{ color: '#10b981' }}>✓</span> <strong style={{ color: '#10b981' }}>Importar Extratos</strong> (10/mês)</li>
                     </ul>
 
                     <button
@@ -292,7 +298,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 </button>
 
                 <div className="techne-badge">
-                    Desenvolvido pela Téchne Solutions
+                    Desenvolvido pela <a href="https://techneia.com.br" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold-primary)', textDecoration: 'underline' }}>Téchne Sistemas</a>
                 </div>
             </footer>
         </div>
