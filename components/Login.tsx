@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabase';
-import { Loader2, Mail, Lock, Sparkles } from 'lucide-react';
+import { Loader2, Mail, Lock } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import { PrivacyPolicyModal } from './PrivacyPolicyModal';
 import { useTranslation } from 'react-i18next';
+import { Logo } from './Logo';
 
 export const Login: React.FC = () => {
     const { t } = useTranslation();
@@ -81,11 +82,8 @@ export const Login: React.FC = () => {
             <Toaster position="top-center" richColors theme="dark" />
             <div className="bg-white dark:bg-slate-800 w-full max-w-md p-8 rounded-2xl shadow-xl border border-indigo-50 dark:border-slate-700 transition-colors duration-300">
                 <div className="flex flex-col items-center mb-8">
-                    <div className="bg-indigo-600 dark:bg-indigo-500 p-3 rounded-xl mb-4 shadow-lg shadow-indigo-200 dark:shadow-none">
-                        <Sparkles className="w-8 h-8 text-white" />
-                    </div>
-                    <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Midas AI</h1>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{t('login.subtitle')}</p>
+                    <Logo className="text-3xl mb-2" />
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">{t('login.subtitle')}</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-4">
