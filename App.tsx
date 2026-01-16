@@ -727,6 +727,25 @@ const App: React.FC = () => {
                 </div>
                 <ChevronRight className="w-5 h-5 text-slate-400" />
               </button>
+
+              <button
+                onClick={() => {
+                  // Open Stripe Customer Portal for subscription management
+                  window.open('https://billing.stripe.com/p/login/bJeaEYaht4mV5zC8pJ00000', '_blank');
+                }}
+                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg text-amber-600 dark:text-amber-400">
+                    <Settings className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <h4 className="font-medium text-slate-900 dark:text-slate-100">Gerenciar Assinatura</h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Alterar plano, cancelar ou atualizar pagamento</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-slate-400" />
+              </button>
             </div>
 
             {/* Logout Section */}
