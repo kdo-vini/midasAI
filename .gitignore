@@ -24,3 +24,6 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# AI Context folder (SQL migrations, schemas for AI reference)
+.context/
