@@ -15,9 +15,11 @@ import { Logo } from './components/Logo';
 import { FloatingChat } from './components/FloatingChat';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { CategoryManager } from './components/CategoryManager';
+import { StatementImport } from './components/StatementImport';
+import { StatementReportView } from './components/StatementReportView';
 import { Transaction, TransactionType, TransactionCategory, AIParsedTransaction, RecurringTransaction, CategoryStat, BudgetGoal, UserCategory, UserProfile } from './types';
 import { Settings, ChevronLeft, ChevronRight, LogOut, Loader2, Moon, Sun } from 'lucide-react';
-import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget, updateTransaction, deleteTransactionsByRecurringId, deleteTransactionsByInstallmentGroupId, fetchUserCategories, saveUserCategory, updateUserCategory, deleteUserCategory, fetchUserProfile, saveUserProfile } from './services/supabase';
+import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget, updateTransaction, deleteTransactionsByRecurringId, deleteTransactionsByInstallmentGroupId, fetchUserCategories, saveUserCategory, updateUserCategory, deleteUserCategory, fetchUserProfile, saveUserProfile, fetchStatementReports, fetchUserUsage, StatementReport, UserUsage } from './services/supabase';
 import { DEFAULT_CATEGORIES } from './constants/categories';
 import { Toaster, toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -56,6 +58,11 @@ const App: React.FC = () => {
 
   // User profile state
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
+  // Statement import state
+  const [statementReports, setStatementReports] = useState<StatementReport[]>([]);
+  const [userUsage, setUserUsage] = useState<UserUsage>({ reports_this_month: 0, last_reset_month: 0 });
+  const [viewingReport, setViewingReport] = useState<StatementReport | null>(null);
 
   // --- Dark Mode Effect ---
   useEffect(() => {
@@ -100,18 +107,22 @@ const App: React.FC = () => {
   const loadData = async (userId: string) => {
     setIsLoadingData(true);
     try {
-      const [txs, recs, budgets, categories, profile] = await Promise.all([
+      const [txs, recs, budgets, categories, profile, reports, usage] = await Promise.all([
         fetchTransactions(userId),
         fetchRecurring(userId),
         fetchBudgets(userId),
         fetchUserCategories(userId),
-        fetchUserProfile(userId)
+        fetchUserProfile(userId),
+        fetchStatementReports(userId).catch(() => []),
+        fetchUserUsage(userId).catch(() => ({ reports_this_month: 0, last_reset_month: 0 }))
       ]);
       setTransactions(txs || []);
       setRecurringItems(recs || []);
       setBudgetGoals(budgets || []);
       setUserCategories(categories || []);
       setUserProfile(profile || { userId, displayName: null });
+      setStatementReports(reports || []);
+      setUserUsage(usage);
     } catch (error) {
       console.error("Error loading data:", error);
       toast.error(t('toasts.loadError'));
@@ -614,6 +625,31 @@ const App: React.FC = () => {
           </div>
         );
 
+      case 'import':
+        return (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            {viewingReport ? (
+              <StatementReportView
+                report={viewingReport}
+                onBack={() => setViewingReport(null)}
+              />
+            ) : (
+              <StatementImport
+                userId={session?.user?.id || ''}
+                reportsThisMonth={userUsage.reports_this_month}
+                maxReports={10}
+                previousReports={statementReports}
+                onReportGenerated={(report) => {
+                  setStatementReports(prev => [report, ...prev]);
+                  setUserUsage(prev => ({ ...prev, reports_this_month: prev.reports_this_month + 1 }));
+                  setViewingReport(report);
+                }}
+                onViewReport={(report) => setViewingReport(report)}
+              />
+            )}
+          </div>
+        );
+
       case 'settings':
         return (
           <div className="space-y-6 animate-in fade-in duration-300">
@@ -789,6 +825,12 @@ const App: React.FC = () => {
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'reports' ? 'bg-indigo-900/20 text-indigo-400' : 'text-slate-400 hover:bg-slate-800'}`}
                 >
                   {t('app.nav.reports')}
+                </button>
+                <button
+                  onClick={() => setActiveTab('import')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'import' ? 'bg-emerald-900/20 text-emerald-400' : 'text-slate-400 hover:bg-slate-800'}`}
+                >
+                  Importar
                 </button>
               </nav>
 

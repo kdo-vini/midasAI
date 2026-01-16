@@ -1,8 +1,8 @@
 import React from 'react';
-import { Home, PieChart, List, Settings } from 'lucide-react';
+import { Home, PieChart, List, Settings, FileUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export type TabType = 'home' | 'transactions' | 'reports' | 'settings';
+export type TabType = 'home' | 'transactions' | 'reports' | 'import' | 'settings';
 
 interface BottomNavProps {
     activeTab: TabType;
@@ -16,6 +16,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange }) 
         { id: 'home' as const, label: t('app.nav.home'), icon: Home },
         { id: 'transactions' as const, label: t('app.nav.transactions'), icon: List },
         { id: 'reports' as const, label: t('app.nav.reports'), icon: PieChart },
+        { id: 'import' as const, label: 'Importar', icon: FileUp },
         { id: 'settings' as const, label: t('app.settings.title'), icon: Settings },
     ];
 
@@ -35,8 +36,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange }) 
                                 : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
                                 }`}
                         >
-                            <Icon className={`w-6 h-6 ${isActive ? 'fill-current opacity-20' : ''}`} strokeWidth={isActive ? 2.5 : 2} />
-                            <span className={`text-[10px] font-medium ${isActive ? 'text-indigo-600 dark:text-indigo-400' : ''}`}>
+                            <Icon className={`w-5 h-5 ${isActive ? 'fill-current opacity-20' : ''}`} strokeWidth={isActive ? 2.5 : 2} />
+                            <span className={`text-[9px] font-medium ${isActive ? 'text-indigo-600 dark:text-indigo-400' : ''}`}>
                                 {item.label}
                             </span>
                         </button>

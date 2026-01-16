@@ -267,3 +267,67 @@ export const saveUserProfile = async (profile: UserProfile) => {
 
     if (error) throw error;
 };
+
+// --- Statement Reports Functions ---
+
+export interface StatementReport {
+    id: string;
+    file_name: string;
+    period_start: string;
+    period_end: string;
+    total_income: number;
+    total_expense: number;
+    categories: Record<string, number>;
+    transactions: any[];
+    banks: string[];
+    ai_advice: string;
+    created_at: string;
+}
+
+export interface UserUsage {
+    reports_this_month: number;
+    last_reset_month: number;
+}
+
+export const fetchStatementReports = async (userId: string): Promise<StatementReport[]> => {
+    const { data, error } = await supabase
+        .from('statement_reports')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+    if (error) throw error;
+    return data || [];
+};
+
+export const fetchUserUsage = async (userId: string): Promise<UserUsage> => {
+    const currentMonth = parseInt(new Date().toISOString().slice(0, 7).replace('-', ''));
+
+    const { data, error } = await supabase
+        .from('user_usage')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+
+    // Reset count if new month
+    if (!data || data.last_reset_month !== currentMonth) {
+        return { reports_this_month: 0, last_reset_month: currentMonth };
+    }
+
+    return {
+        reports_this_month: data.reports_this_month || 0,
+        last_reset_month: data.last_reset_month
+    };
+};
+
+export const parseStatementWithAI = async (transactions: any[], userId: string): Promise<StatementReport> => {
+    const { data, error } = await supabase.functions.invoke('parse-statement', {
+        body: { transactions, userId }
+    });
+
+    if (error) throw error;
+    return data;
+};
