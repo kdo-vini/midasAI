@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabase';
-import { Loader2, Mail, Lock, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Loader2, Mail, Lock, ArrowLeft, CheckCircle, User } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import { PrivacyPolicyModal } from './PrivacyPolicyModal';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,8 @@ export const Login: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [displayName, setDisplayName] = useState('');
     const [isSignUp, setIsSignUp] = useState(false);
     const [showPrivacy, setShowPrivacy] = useState(false);
     const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -22,6 +24,20 @@ export const Login: React.FC = () => {
 
         try {
             if (isSignUp) {
+                // Validate password confirmation
+                if (password !== confirmPassword) {
+                    toast.error('As senhas não coincidem');
+                    setLoading(false);
+                    return;
+                }
+
+                // Validate display name
+                if (!displayName.trim()) {
+                    toast.error('Digite seu nome');
+                    setLoading(false);
+                    return;
+                }
+
                 const { data, error } = await supabase.auth.signUp({
                     email,
                     password,
@@ -37,6 +53,14 @@ export const Login: React.FC = () => {
                     }
                     setLoading(false);
                     return;
+                }
+
+                // Save display name to user_profiles if signup successful
+                if (data?.user) {
+                    await supabase.from('user_profiles').upsert({
+                        user_id: data.user.id,
+                        display_name: displayName.trim(),
+                    }, { onConflict: 'user_id' });
                 }
 
                 // Show confirmation message
@@ -253,6 +277,41 @@ export const Login: React.FC = () => {
                             />
                         </div>
                     </div>
+
+                    {/* Signup only fields */}
+                    {isSignUp && (
+                        <>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Confirmar Senha</label>
+                                <div className="relative">
+                                    <Lock className="w-5 h-5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                                    <input
+                                        type="password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all placeholder-slate-400 dark:placeholder-slate-500"
+                                        placeholder="Digite a senha novamente"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Como quer ser chamado?</label>
+                                <div className="relative">
+                                    <User className="w-5 h-5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                                    <input
+                                        type="text"
+                                        value={displayName}
+                                        onChange={(e) => setDisplayName(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all placeholder-slate-400 dark:placeholder-slate-500"
+                                        placeholder="Seu nome"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    )}
 
                     <button
                         type="submit"
