@@ -25,11 +25,14 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
         .filter(c => c.type === TransactionType.EXPENSE && c.amount > 0)
         .sort((a, b) => b.amount - a.amount);
 
-    // Budget report - combines all valid expense categories
+    // Budget report - combines valid expense categories and active spending
+    const activeExpenseStats = categoryStats
+        .filter(c => c.type === TransactionType.EXPENSE && c.amount > 0)
+        .map(c => c.category);
+
     const allCategories = Array.from(new Set([
         ...userCategories,
-        ...budgetGoals.map(g => g.category),
-        ...categoryStats.filter(c => c.type === TransactionType.EXPENSE).map(c => c.category)
+        ...activeExpenseStats
     ]));
 
     const budgetReport = allCategories.map(category => {
@@ -221,17 +224,17 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
                         <div className="flex justify-between items-center mb-2">
                             <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">Total Planejado</span>
                             <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                                {budgetGoals.reduce((acc, curr) => acc + curr.targetPercentage, 0)}%
+                                {budgetReport.reduce((acc, curr) => acc + curr.targetPercent, 0)}%
                             </span>
                         </div>
                         <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2.5">
                             <div
-                                className={`h-full rounded-full transition-all duration-500 ${budgetGoals.reduce((acc, curr) => acc + curr.targetPercentage, 0) > 100 ? 'bg-red-500' : 'bg-emerald-500'
+                                className={`h-full rounded-full transition-all duration-500 ${budgetReport.reduce((acc, curr) => acc + curr.targetPercent, 0) > 100 ? 'bg-red-500' : 'bg-emerald-500'
                                     }`}
-                                style={{ width: `${Math.min(budgetGoals.reduce((acc, curr) => acc + curr.targetPercentage, 0), 100)}%` }}
+                                style={{ width: `${Math.min(budgetReport.reduce((acc, curr) => acc + curr.targetPercent, 0), 100)}%` }}
                             />
                         </div>
-                        {budgetGoals.reduce((acc, curr) => acc + curr.targetPercentage, 0) > 100 && (
+                        {budgetReport.reduce((acc, curr) => acc + curr.targetPercent, 0) > 100 && (
                             <p className="text-xs text-red-600 dark:text-red-400 mt-2 font-medium">O orçamento excede 100%.</p>
                         )}
                     </div>

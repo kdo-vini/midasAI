@@ -22,7 +22,7 @@ import { StatementReportView } from './components/StatementReportView';
 import { Paywall } from './components/Paywall';
 import { Transaction, TransactionType, TransactionCategory, AIParsedTransaction, RecurringTransaction, CategoryStat, BudgetGoal, UserCategory, UserProfile } from './types';
 import { Settings, ChevronLeft, ChevronRight, LogOut, Loader2, Moon, Sun, Bell, BellOff } from 'lucide-react';
-import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget, updateTransaction, deleteTransactionsByRecurringId, deleteTransactionsByInstallmentGroupId, fetchUserCategories, saveUserCategory, updateUserCategory, deleteUserCategory, updateTransactionsCategory, deleteTransactionsByCategory, fetchUserProfile, saveUserProfile, fetchStatementReports, fetchUserUsage, StatementReport, UserUsage } from './services/supabase';
+import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget, updateTransaction, deleteTransactionsByRecurringId, deleteTransactionsByInstallmentGroupId, fetchUserCategories, saveUserCategory, updateUserCategory, deleteUserCategory, updateTransactionsCategory, deleteTransactionsByCategory, updateBudgetCategory, deleteBudgetByCategory, fetchUserProfile, saveUserProfile, fetchStatementReports, fetchUserUsage, StatementReport, UserUsage } from './services/supabase';
 import { DEFAULT_INCOME_CATEGORIES, DEFAULT_EXPENSE_CATEGORIES } from './constants/categories';
 import { Toaster, toast } from 'sonner';
 
@@ -519,15 +519,24 @@ const App: React.FC = () => {
       if (categoryId) {
         await deleteUserCategory(categoryId);
       }
+
+      // Update transactions
       await updateTransactionsCategory(oldName, newName, session.user.id);
+
+      // Update budget goals safely
+      await updateBudgetCategory(oldName, newName, session.user.id);
 
       const newTransactions = await fetchTransactions(session.user.id);
       setTransactions(newTransactions || []);
 
+      // Refresh budgets
+      const newBudgets = await fetchBudgets(session.user.id);
+      setBudgetGoals(newBudgets);
+
       if (categoryId) {
         setUserCategories(prev => prev.filter(c => c.id !== categoryId));
       }
-      toast.success('Categoria excluída e transações reatribuídas!');
+      toast.success('Categoria excluída e transações/metas reatribuídas!');
     } catch (error) {
       console.error("Error reassigning category:", error);
       toast.error('Erro ao processar exclusão.');
@@ -541,14 +550,19 @@ const App: React.FC = () => {
         await deleteUserCategory(categoryId);
       }
       await deleteTransactionsByCategory(categoryName, session.user.id);
+      await deleteBudgetByCategory(categoryName, session.user.id);
 
       const newTransactions = await fetchTransactions(session.user.id);
       setTransactions(newTransactions || []);
 
+      // Refresh budgets
+      const newBudgets = await fetchBudgets(session.user.id);
+      setBudgetGoals(newBudgets);
+
       if (categoryId) {
         setUserCategories(prev => prev.filter(c => c.id !== categoryId));
       }
-      toast.success('Categoria e transações excluídas!');
+      toast.success('Categoria, metas e transações excluídas!');
     } catch (error) {
       console.error("Error deleting category cascading:", error);
       toast.error('Erro ao excluir em cascata.');
@@ -932,7 +946,7 @@ const App: React.FC = () => {
                   <div className="text-left">
                     <h4 className="font-medium text-slate-900 dark:text-slate-100">Gerenciar Assinatura</h4>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {userProfile?.subscriptionStatus === 'active' ? 'Alterar plano, cancelar ou cartão' : 'Fazer Upgrade para o Midas Premium'}
+                      {userProfile?.subscriptionStatus === 'active' ? 'Alterar plano, cancelar ou cartão' : 'Gerenciar a sua assinatura'}
                     </p>
                   </div>
                 </div>
@@ -1027,7 +1041,7 @@ const App: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 py-3">
           {trialDaysLeft !== null && trialDaysLeft > 0 && (
             <div className="mb-3 px-4 py-3 bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20 text-amber-500 rounded-xl text-sm flex items-center justify-between">
-              <span className="flex items-center gap-2">✨ Faltam apenas <b>{trialDaysLeft} dias</b> para seu Free Trial encerrar.</span>
+              <span className="flex items-center gap-2">✨ Faltam apenas <b>{trialDaysLeft} dias</b> para seu Teste Grátis encerrar.</span>
               <button onClick={handleUpgradeSubscription} className="font-bold px-3 py-1 bg-amber-500/20 rounded-lg hover:bg-amber-500/30 transition-colors">Assinar Agora</button>
             </div>
           )}

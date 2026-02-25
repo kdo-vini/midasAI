@@ -165,6 +165,40 @@ export const deleteTransactionsByCategory = async (category: string, userId: str
     if (error) throw error;
 };
 
+export const updateBudgetCategory = async (oldCategory: string, newCategory: string, userId: string) => {
+    // Check if newCategory already has a budget
+    const { data } = await supabase
+        .from('budget_goals')
+        .select('*')
+        .match({ category: newCategory, user_id: userId })
+        .single();
+
+    if (data) {
+        // If the destination already has a budget, delete the old budget to avoid duplicates
+        const { error } = await supabase
+            .from('budget_goals')
+            .delete()
+            .match({ category: oldCategory, user_id: userId });
+        if (error) throw error;
+    } else {
+        // Otherwise, rename it
+        const { error } = await supabase
+            .from('budget_goals')
+            .update({ category: newCategory })
+            .match({ category: oldCategory, user_id: userId });
+        if (error) throw error;
+    }
+};
+
+export const deleteBudgetByCategory = async (category: string, userId: string) => {
+    const { error } = await supabase
+        .from('budget_goals')
+        .delete()
+        .match({ category, user_id: userId });
+
+    if (error) throw error;
+};
+
 export const deleteTransactionsByRecurringId = async (recurringId: string) => {
     const { error } = await supabase
         .from('transactions')
