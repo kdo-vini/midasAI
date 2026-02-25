@@ -19,6 +19,7 @@ import { EmailConfirmed } from './components/EmailConfirmed';
 import { CategoryManager } from './components/CategoryManager';
 import { StatementImport } from './components/StatementImport';
 import { StatementReportView } from './components/StatementReportView';
+import { Paywall } from './components/Paywall';
 import { Transaction, TransactionType, TransactionCategory, AIParsedTransaction, RecurringTransaction, CategoryStat, BudgetGoal, UserCategory, UserProfile } from './types';
 import { Settings, ChevronLeft, ChevronRight, LogOut, Loader2, Moon, Sun, Bell, BellOff } from 'lucide-react';
 import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget, updateTransaction, deleteTransactionsByRecurringId, deleteTransactionsByInstallmentGroupId, fetchUserCategories, saveUserCategory, updateUserCategory, deleteUserCategory, updateTransactionsCategory, deleteTransactionsByCategory, fetchUserProfile, saveUserProfile, fetchStatementReports, fetchUserUsage, StatementReport, UserUsage } from './services/supabase';
@@ -568,6 +569,35 @@ const App: React.FC = () => {
     }
   };
 
+  // --- Subscription Management ---
+  const handleManageSubscription = async () => {
+    if (!session?.user) return;
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-portal', {
+        body: { userId: session.user.id, returnUrl: window.location.origin }
+      });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch (err) {
+      console.error('Portal error:', err);
+      toast.error('Erro ao abrir portal.');
+    }
+  };
+
+  const handleUpgradeSubscription = async () => {
+    if (!session?.user) return;
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
+        body: { userId: session.user.id, email: session.user.email, returnUrl: window.location.origin }
+      });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch (err) {
+      console.error('Checkout error:', err);
+      toast.error('Erro ao iniciar checkout.');
+    }
+  };
+
   // --- Push Notification Toggle ---
   const handleTogglePush = async () => {
     if (!session?.user) return;
@@ -638,6 +668,20 @@ const App: React.FC = () => {
   const allIncomeCategories = incomeCategoryNames.length > 0 ? incomeCategoryNames : DEFAULT_INCOME_CATEGORIES;
 
   const allCategories = [...allExpenseCategories, ...allIncomeCategories];
+
+  const isPro = useMemo(() => {
+    if (!userProfile) return true; // default true while loading
+    if (userProfile.subscriptionStatus === 'active') return true;
+    if (userProfile.trialEndDate && new Date() < new Date(userProfile.trialEndDate)) return true;
+    return false;
+  }, [userProfile]);
+
+  const trialDaysLeft = useMemo(() => {
+    if (!userProfile?.trialEndDate || userProfile.subscriptionStatus === 'active') return null;
+    const diffTime = new Date(userProfile.trialEndDate).getTime() - new Date().getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  }, [userProfile]);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -878,10 +922,7 @@ const App: React.FC = () => {
               )}
 
               <button
-                onClick={() => {
-                  // Open Stripe Customer Portal for subscription management
-                  window.open('https://billing.stripe.com/p/login/bJeaEYaht4mV5zC8pJ00000', '_blank');
-                }}
+                onClick={userProfile?.subscriptionStatus === 'active' ? handleManageSubscription : handleUpgradeSubscription}
                 className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
@@ -890,7 +931,9 @@ const App: React.FC = () => {
                   </div>
                   <div className="text-left">
                     <h4 className="font-medium text-slate-900 dark:text-slate-100">Gerenciar Assinatura</h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Alterar plano, cancelar ou atualizar pagamento</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      {userProfile?.subscriptionStatus === 'active' ? 'Alterar plano, cancelar ou cartão' : 'Fazer Upgrade para o Midas Premium'}
+                    </p>
                   </div>
                 </div>
                 <ChevronRight className="w-5 h-5 text-slate-400" />
@@ -964,12 +1007,30 @@ const App: React.FC = () => {
     );
   }
 
+  // PAYWALL VIEW
+  if (!isPro) {
+    return (
+      <Paywall
+        transactions={transactions}
+        userId={session.user.id}
+        email={session.user.email}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
   // APP VIEW
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 pb-24 md:pb-20 font-sans">
       <Toaster position="top-center" richColors theme="dark" />
       <header className="bg-slate-800 border-b border-slate-700 sticky top-0 z-40 shadow-sm/50 backdrop-blur-md bg-slate-800/90 transition-colors duration-300">
         <div className="max-w-4xl mx-auto px-4 py-3">
+          {trialDaysLeft !== null && trialDaysLeft > 0 && (
+            <div className="mb-3 px-4 py-3 bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20 text-amber-500 rounded-xl text-sm flex items-center justify-between">
+              <span className="flex items-center gap-2">✨ Faltam apenas <b>{trialDaysLeft} dias</b> para seu Free Trial encerrar.</span>
+              <button onClick={handleUpgradeSubscription} className="font-bold px-3 py-1 bg-amber-500/20 rounded-lg hover:bg-amber-500/30 transition-colors">Assinar Agora</button>
+            </div>
+          )}
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2 bg-slate-700/50 rounded-lg p-1 border border-slate-600/60">
               <button onClick={handlePrevMonth} className="p-1.5 hover:bg-slate-600 hover:shadow-sm rounded-md transition-all text-slate-300">
