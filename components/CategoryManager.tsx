@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { UserCategory, TransactionType } from '../types';
 import { Transaction } from '../types';
+import { toast } from 'sonner';
 
 interface CategoryManagerProps {
     isOpen: boolean;
@@ -44,7 +45,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
         if (!newCategoryName.trim()) return;
 
         if (categories.some(c => c.name.toLowerCase() === newCategoryName.trim().toLowerCase() && c.type === activeTab)) {
-            alert('Já existe uma categoria com este nome');
+            toast.error('Já existe uma categoria com este nome');
             return;
         }
 
@@ -56,7 +57,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
         if (!editingName.trim()) return;
 
         if (categories.some(c => c.id !== id && c.name.toLowerCase() === editingName.trim().toLowerCase())) {
-            alert('Já existe uma categoria com este nome');
+            toast.error('Já existe uma categoria com este nome');
             return;
         }
 
@@ -69,13 +70,20 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
         const usageCount = getCategoryUsageCount(name);
 
         if (usageCount > 0) {
-            alert(`Esta categoria está sendo usada em ${usageCount} transações`);
+            toast.error(`Esta categoria está sendo usada em ${usageCount} transações`);
             return;
         }
 
-        if (confirm(`Tem certeza que deseja deletar "${name}"?`)) {
-            onDelete(id);
-        }
+        toast(`Tem certeza que deseja deletar "${name}"?`, {
+            action: {
+                label: 'Confirmar Exclusão',
+                onClick: () => onDelete(id)
+            },
+            cancel: {
+                label: 'Cancelar',
+                onClick: () => { }
+            }
+        });
     };
 
     return (
