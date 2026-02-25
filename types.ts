@@ -62,6 +62,10 @@ export interface UserCategory {
 export interface UserProfile {
   userId: string;
   displayName: string | null;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  subscriptionStatus?: 'active' | 'canceled' | 'past_due' | 'trialing' | 'unpaid' | 'incomplete' | 'incomplete_expired' | string | null;
+  trialEndDate?: string | null; // ISO string
 }
 
 // AI Response Structure

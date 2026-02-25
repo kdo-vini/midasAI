@@ -50,6 +50,18 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
         return transactions.filter(t => t.category === categoryName).length;
     };
 
+    const getCategoryUsageCountCurrentMonth = (categoryName: string) => {
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+        return transactions.filter(t => {
+            if (t.category !== categoryName) return false;
+            const tDate = new Date(t.date);
+            return tDate >= startOfMonth && tDate <= endOfMonth;
+        }).length;
+    };
+
     const handleAdd = () => {
         if (!newCategoryName.trim()) return;
 
@@ -335,6 +347,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                 categoryId={deleteTargetId}
                 categoryName={deleteTargetName}
                 usageCount={getCategoryUsageCount(deleteTargetName)}
+                usageCountCurrentMonth={getCategoryUsageCountCurrentMonth(deleteTargetName)}
                 availableCategories={categories.filter(c => c.type === activeTab)}
                 onReassign={(oldName, newName) => {
                     onReassignAndDelete(deleteTargetId, oldName, newName);

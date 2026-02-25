@@ -27,19 +27,19 @@ serve(async (req) => {
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
         // Get user's Stripe customer ID
-        const { data: subscription } = await supabase
-            .from('subscriptions')
+        const { data: profile } = await supabase
+            .from('user_profiles')
             .select('stripe_customer_id')
             .eq('user_id', userId)
             .single();
 
-        if (!subscription?.stripe_customer_id) {
-            throw new Error('No subscription found');
+        if (!profile?.stripe_customer_id) {
+            throw new Error('No stripe customer found for user');
         }
 
         // Create billing portal session
         const session = await stripe.billingPortal.sessions.create({
-            customer: subscription.stripe_customer_id,
+            customer: profile.stripe_customer_id,
             return_url: returnUrl,
         });
 

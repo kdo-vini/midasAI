@@ -36,17 +36,14 @@ serve(async (req) => {
                     // Get subscription details
                     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
-                    await supabase.from('subscriptions').upsert({
-                        user_id: userId,
+                    await supabase.from('user_profiles').update({
                         stripe_customer_id: customerId,
                         stripe_subscription_id: subscriptionId,
-                        status: subscription.status,
-                        trial_ends_at: subscription.trial_end
+                        subscription_status: subscription.status,
+                        trial_end_date: subscription.trial_end
                             ? new Date(subscription.trial_end * 1000).toISOString()
-                            : null,
-                        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-                        updated_at: new Date().toISOString(),
-                    }, { onConflict: 'user_id' });
+                            : null
+                    }).eq('user_id', userId);
                 }
                 break;
             }
@@ -57,14 +54,12 @@ serve(async (req) => {
                 const customerId = subscription.customer as string;
 
                 await supabase
-                    .from('subscriptions')
+                    .from('user_profiles')
                     .update({
-                        status: subscription.status,
-                        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-                        trial_ends_at: subscription.trial_end
+                        subscription_status: subscription.status,
+                        trial_end_date: subscription.trial_end
                             ? new Date(subscription.trial_end * 1000).toISOString()
-                            : null,
-                        updated_at: new Date().toISOString(),
+                            : null
                     })
                     .eq('stripe_customer_id', customerId);
                 break;
@@ -75,10 +70,9 @@ serve(async (req) => {
                 const customerId = invoice.customer as string;
 
                 await supabase
-                    .from('subscriptions')
+                    .from('user_profiles')
                     .update({
-                        status: 'past_due',
-                        updated_at: new Date().toISOString(),
+                        subscription_status: 'past_due'
                     })
                     .eq('stripe_customer_id', customerId);
                 break;

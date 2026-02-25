@@ -28,13 +28,13 @@ serve(async (req) => {
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
         // Check if user already has a subscription
-        const { data: existingSub } = await supabase
-            .from('subscriptions')
+        const { data: profile } = await supabase
+            .from('user_profiles')
             .select('stripe_customer_id')
             .eq('user_id', userId)
             .single();
 
-        let customerId = existingSub?.stripe_customer_id;
+        let customerId = profile?.stripe_customer_id;
 
         // Create Stripe customer if doesn't exist
         if (!customerId) {

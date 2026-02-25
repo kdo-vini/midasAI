@@ -272,7 +272,11 @@ export const fetchUserProfile = async (userId: string) => {
 
     return {
         userId: data.user_id,
-        displayName: data.display_name
+        displayName: data.display_name,
+        stripeCustomerId: data.stripe_customer_id,
+        stripeSubscriptionId: data.stripe_subscription_id,
+        subscriptionStatus: data.subscription_status,
+        trialEndDate: data.trial_end_date
     } as UserProfile;
 };
 
