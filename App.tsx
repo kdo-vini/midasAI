@@ -204,7 +204,7 @@ const App: React.FC = () => {
             isRecurring: true,
             recurringId: item.id,
             isPaid: false,
-            transactionCategory: 'fixed'
+            transactionCategory: item.type === TransactionType.INCOME ? 'income' : 'fixed'
           });
           hasChanges = true;
         }
