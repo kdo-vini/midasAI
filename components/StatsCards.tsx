@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Target, Edit2, Check, PieChart, TrendingDown, Wallet } from 'lucide-react';
 import { MonthlyStats, CategoryStat, TransactionType, BudgetGoal } from '../types';
-import { useTranslation } from 'react-i18next';
 
 interface StatsCardsProps {
     stats: MonthlyStats;
@@ -11,14 +10,13 @@ interface StatsCardsProps {
 }
 
 export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, budgetGoals, onUpdateBudget }) => {
-    const { t, i18n } = useTranslation();
     const [editingCategory, setEditingCategory] = useState<string | null>(null);
     const [tempPercent, setTempPercent] = useState<string>('');
 
     const formatCurrency = (val: number) =>
-        new Intl.NumberFormat(i18n.language === 'pt' ? 'pt-BR' : 'en-US', {
+        new Intl.NumberFormat('pt-BR', {
             style: 'currency',
-            currency: i18n.language === 'pt' ? 'BRL' : 'USD'
+            currency: 'BRL'
         }).format(val);
 
     // Filter expense categories with actual spending
@@ -69,7 +67,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
                 <div className="bg-indigo-100 dark:bg-indigo-900/30 p-2 rounded-lg">
                     <PieChart className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t('reports.monthlyReport')}</h3>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Relatório Mensal</h3>
             </div>
 
             {/* Summary Cards */}
@@ -77,7 +75,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
                 <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-2xl p-5 border border-red-200 dark:border-red-800">
                     <div className="flex items-center gap-3 mb-2">
                         <TrendingDown className="w-5 h-5 text-red-600 dark:text-red-400" />
-                        <span className="text-sm font-medium text-red-700 dark:text-red-300">{t('reports.totalExpenses')}</span>
+                        <span className="text-sm font-medium text-red-700 dark:text-red-300">Total Gastos</span>
                     </div>
                     <p className="text-3xl font-bold text-red-900 dark:text-red-100">{formatCurrency(stats.totalExpense)}</p>
                 </div>
@@ -85,7 +83,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
                 <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-2xl p-5 border border-emerald-200 dark:border-emerald-800">
                     <div className="flex items-center gap-3 mb-2">
                         <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                        <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{t('reports.savings')}</span>
+                        <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Economia</span>
                     </div>
                     <div className="flex items-baseline gap-2">
                         <p className={`text-3xl font-bold ${stats.balance >= 0 ? 'text-emerald-900 dark:text-emerald-100' : 'text-red-900 dark:text-red-100'}`}>
@@ -102,7 +100,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
             {expenseCategories.length > 0 && (
                 <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
                     <h4 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">
-                        {t('reports.expenseDistribution')}
+                        Distribuição de Gastos
                     </h4>
                     <div className="space-y-4">
                         {expenseCategories.map((cat) => (
@@ -132,7 +130,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
                     <div className="flex items-center gap-2 mb-5">
                         <Target className="w-4 h-4 text-orange-500" />
                         <h4 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                            {t('reports.budgetGoals')}
+                            Metas de Orçamento
                         </h4>
                     </div>
 
@@ -143,8 +141,8 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
                                 <div className="flex items-center justify-between mb-3">
                                     <h5 className="font-semibold text-slate-900 dark:text-slate-100">{row.category}</h5>
                                     <div className={`text-xs font-bold px-2.5 py-1 rounded-full ${row.usagePercent > 100 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
-                                            row.usagePercent > 80 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' :
-                                                'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                                        row.usagePercent > 80 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' :
+                                            'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
                                         }`}>
                                         {Math.round(row.usagePercent)}%
                                     </div>
@@ -155,8 +153,8 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
                                     <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2 overflow-hidden">
                                         <div
                                             className={`h-full rounded-full transition-all duration-500 ${row.usagePercent > 100 ? 'bg-red-500' :
-                                                    row.usagePercent > 80 ? 'bg-amber-500' :
-                                                        'bg-emerald-500'
+                                                row.usagePercent > 80 ? 'bg-amber-500' :
+                                                    'bg-emerald-500'
                                                 }`}
                                             style={{ width: `${Math.min(row.usagePercent, 100)}%` }}
                                         />
@@ -166,11 +164,11 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
                                 {/* Amounts */}
                                 <div className="flex justify-between text-sm">
                                     <div>
-                                        <span className="text-slate-500 dark:text-slate-400">{t('reports.table.actual')}: </span>
+                                        <span className="text-slate-500 dark:text-slate-400">Real: </span>
                                         <span className="font-bold text-slate-900 dark:text-slate-100">{formatCurrency(row.actualAmount)}</span>
                                     </div>
                                     <div>
-                                        <span className="text-slate-500 dark:text-slate-400">{t('reports.table.goal')}: </span>
+                                        <span className="text-slate-500 dark:text-slate-400">Meta: </span>
                                         <span className="font-medium text-slate-700 dark:text-slate-300">{formatCurrency(row.budgetAmount)}</span>
                                     </div>
                                 </div>
@@ -212,7 +210,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
                     {/* Total planned */}
                     <div className="mt-6 p-4 bg-slate-100 dark:bg-slate-700/50 rounded-xl">
                         <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">{t('reports.totalPlanned')}</span>
+                            <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">Total Planejado</span>
                             <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
                                 {budgetGoals.reduce((acc, curr) => acc + curr.targetPercentage, 0)}%
                             </span>
@@ -225,7 +223,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
                             />
                         </div>
                         {budgetGoals.reduce((acc, curr) => acc + curr.targetPercentage, 0) > 100 && (
-                            <p className="text-xs text-red-600 dark:text-red-400 mt-2 font-medium">{t('reports.budgetExceeded')}</p>
+                            <p className="text-xs text-red-600 dark:text-red-400 mt-2 font-medium">O orçamento excede 100%.</p>
                         )}
                     </div>
                 </div>
@@ -233,7 +231,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
 
             {budgetReport.length === 0 && expenseCategories.length === 0 && (
                 <div className="bg-white dark:bg-slate-800 rounded-2xl p-12 border border-slate-200 dark:border-slate-700 text-center">
-                    <p className="text-slate-400 dark:text-slate-500 italic">{t('reports.emptyState')}</p>
+                    <p className="text-slate-400 dark:text-slate-500 italic">Adicione rendas e gastos para gerar o relatório.</p>
                 </div>
             )}
         </div>

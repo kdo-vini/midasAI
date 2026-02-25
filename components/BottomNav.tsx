@@ -1,6 +1,5 @@
 import React from 'react';
 import { Home, PieChart, List, Settings, FileUp } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 
 export type TabType = 'home' | 'transactions' | 'reports' | 'import' | 'settings';
 
@@ -10,14 +9,12 @@ interface BottomNavProps {
 }
 
 export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange }) => {
-    const { t } = useTranslation();
-
     const navItems = [
-        { id: 'home' as const, label: t('app.nav.home'), icon: Home },
-        { id: 'transactions' as const, label: t('app.nav.transactions'), icon: List },
-        { id: 'reports' as const, label: t('app.nav.reports'), icon: PieChart },
+        { id: 'home' as const, label: 'Início', icon: Home },
+        { id: 'transactions' as const, label: 'Transações', icon: List },
+        { id: 'reports' as const, label: 'Relatórios', icon: PieChart },
         { id: 'import' as const, label: 'Importar', icon: FileUp },
-        { id: 'settings' as const, label: t('app.settings.title'), icon: Settings },
+        { id: 'settings' as const, label: 'Configurações', icon: Settings },
     ];
 
     return (

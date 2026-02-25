@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../services/supabase';
 import { Loader2, Lock, CheckCircle } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
-import { useTranslation } from 'react-i18next';
+
 import { Logo } from './Logo';
 
 interface UpdatePasswordProps {
@@ -10,7 +10,7 @@ interface UpdatePasswordProps {
 }
 
 export const UpdatePassword: React.FC<UpdatePasswordProps> = ({ onSuccess }) => {
-    const { t } = useTranslation();
+
     const [loading, setLoading] = useState(false);
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');

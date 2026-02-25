@@ -3,11 +3,9 @@ import { supabase } from '../services/supabase';
 import { Loader2, Mail, Lock, ArrowLeft, CheckCircle, User } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import { PrivacyPolicyModal } from './PrivacyPolicyModal';
-import { useTranslation } from 'react-i18next';
 import { Logo } from './Logo';
 
 export const Login: React.FC = () => {
-    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -24,14 +22,12 @@ export const Login: React.FC = () => {
 
         try {
             if (isSignUp) {
-                // Validate password confirmation
                 if (password !== confirmPassword) {
                     toast.error('As senhas não coincidem');
                     setLoading(false);
                     return;
                 }
 
-                // Validate display name
                 if (!displayName.trim()) {
                     toast.error('Digite seu nome');
                     setLoading(false);
@@ -45,9 +41,9 @@ export const Login: React.FC = () => {
 
                 if (error) {
                     if (error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('user already registered')) {
-                        toast.error(t('login.errors.emailExists'));
+                        toast.error('Este email já está cadastrado');
                     } else if (error.message.toLowerCase().includes('password') && error.message.toLowerCase().includes('weak')) {
-                        toast.error(t('login.errors.weakPassword'));
+                        toast.error('Senha muito fraca. Use pelo menos 6 caracteres');
                     } else {
                         toast.error(error.message);
                     }
@@ -55,7 +51,6 @@ export const Login: React.FC = () => {
                     return;
                 }
 
-                // Save display name to user_profiles if signup successful
                 if (data?.user) {
                     await supabase.from('user_profiles').upsert({
                         user_id: data.user.id,
@@ -63,7 +58,6 @@ export const Login: React.FC = () => {
                     }, { onConflict: 'user_id' });
                 }
 
-                // Show confirmation message
                 setShowEmailSent('signup');
                 setLoading(false);
             } else {
@@ -76,23 +70,23 @@ export const Login: React.FC = () => {
                     console.error('Login error:', error);
 
                     if (error.status === 400 || error.message.toLowerCase().includes('invalid') || error.message.toLowerCase().includes('incorrect')) {
-                        toast.error(t('login.errors.invalidCredentials'));
+                        toast.error('Email ou senha incorretos');
                     } else if (error.message.toLowerCase().includes('not confirmed') || error.message.toLowerCase().includes('email not confirmed')) {
-                        toast.error(t('login.errors.emailNotConfirmed'));
+                        toast.error('Confirme seu email antes de fazer login');
                     } else if (error.message.toLowerCase().includes('email')) {
-                        toast.error(t('login.errors.invalidEmail'));
+                        toast.error('Email inválido');
                     } else {
-                        toast.error(t('login.errors.invalidCredentials'));
+                        toast.error('Email ou senha incorretos');
                     }
                     setLoading(false);
                     return;
                 }
 
-                toast.success(t('login.loginSuccess'));
+                toast.success('Login realizado com sucesso!');
             }
         } catch (error: any) {
             console.error('Auth error:', error);
-            toast.error(t('login.errors.networkError'));
+            toast.error('Erro de conexão. Tente novamente');
             setLoading(false);
         } finally {
             if (!isSignUp) {
@@ -233,12 +227,12 @@ export const Login: React.FC = () => {
             <div className="bg-white dark:bg-slate-800 w-full max-w-md p-8 rounded-2xl shadow-xl border border-indigo-50 dark:border-slate-700 transition-colors duration-300">
                 <div className="flex flex-col items-center mb-8">
                     <Logo className="text-3xl mb-2" />
-                    <p className="text-slate-500 dark:text-slate-400 text-sm">{t('login.subtitle')}</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">Seu assistente financeiro inteligente</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t('login.emailLabel')}</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
                         <div className="relative">
                             <Mail className="w-5 h-5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                             <input
@@ -246,7 +240,7 @@ export const Login: React.FC = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all placeholder-slate-400 dark:placeholder-slate-500"
-                                placeholder={t('login.emailPlaceholder')}
+                                placeholder="seu@email.com"
                                 required
                             />
                         </div>
@@ -254,7 +248,7 @@ export const Login: React.FC = () => {
 
                     <div>
                         <div className="flex justify-between items-center mb-1">
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t('login.passwordLabel')}</label>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Senha</label>
                             {!isSignUp && (
                                 <button
                                     type="button"
@@ -272,7 +266,7 @@ export const Login: React.FC = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all placeholder-slate-400 dark:placeholder-slate-500"
-                                placeholder={t('login.passwordPlaceholder')}
+                                placeholder="••••••••"
                                 required
                             />
                         </div>
@@ -321,20 +315,20 @@ export const Login: React.FC = () => {
                         {loading ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
-                            isSignUp ? t('login.createAccount') : t('login.enter')
+                            isSignUp ? 'Criar Conta' : 'Entrar'
                         )}
                     </button>
                 </form>
 
                 {isSignUp && (
                     <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
-                        {t('login.agreeToPrivacy')}
+                        Ao criar sua conta, você concorda com nossa {' '}
                         <button
                             type="button"
                             onClick={() => setShowPrivacy(true)}
                             className="text-indigo-600 hover:underline dark:text-indigo-400 font-medium focus:outline-none"
                         >
-                            {t('login.privacyPolicy')}
+                            Política de Privacidade
                         </button>
                     </p>
                 )}
@@ -344,7 +338,7 @@ export const Login: React.FC = () => {
                         onClick={() => setIsSignUp(!isSignUp)}
                         className="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium hover:underline"
                     >
-                        {isSignUp ? t('login.haveAccount') : t('login.needAccount')}
+                        {isSignUp ? 'Já tem uma conta? Entre aqui' : 'Não tem conta? Crie uma agora'}
                     </button>
                 </div>
             </div>

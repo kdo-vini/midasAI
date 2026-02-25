@@ -3,7 +3,6 @@ import { Lightbulb, RefreshCw, Sparkles } from 'lucide-react';
 import { generateInsights } from '../services/openaiService';
 import { Transaction, BudgetGoal } from '../types';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
 
 interface InsightsComponentProps {
     transactions: Transaction[];
@@ -11,17 +10,16 @@ interface InsightsComponentProps {
 }
 
 export const InsightsComponent: React.FC<InsightsComponentProps> = ({ transactions, budgetGoals }) => {
-    const { t, i18n } = useTranslation();
     const [insight, setInsight] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
     const handleGenerate = async () => {
         setLoading(true);
         try {
-            const result = await generateInsights(transactions, budgetGoals, i18n.language);
+            const result = await generateInsights(transactions, budgetGoals, 'pt');
             setInsight(result);
         } catch (error) {
-            toast.error(t('insights.error'));
+            toast.error('Erro ao gerar insights.');
         } finally {
             setLoading(false);
         }
@@ -40,14 +38,14 @@ export const InsightsComponent: React.FC<InsightsComponentProps> = ({ transactio
                         <div className="p-2 rounded-lg bg-[#FFD700]/10 border border-[#FFD700]/20">
                             <Sparkles className="w-4 h-4 text-[#FFD700]" />
                         </div>
-                        <h3 className="font-space font-bold text-lg text-slate-100 tracking-tight">{t('insights.title')}</h3>
+                        <h3 className="font-space font-bold text-lg text-slate-100 tracking-tight">Midas Insights</h3>
                     </div>
 
                     <button
                         onClick={handleGenerate}
                         disabled={loading}
                         className="p-2 text-slate-500 hover:text-[#FFD700] hover:bg-[#FFD700]/5 rounded-lg transition-all disabled:opacity-50"
-                        title={t('insights.generate')}
+                        title="Gerar novo insight"
                     >
                         <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                     </button>
@@ -64,7 +62,7 @@ export const InsightsComponent: React.FC<InsightsComponentProps> = ({ transactio
                         </div>
                     ) : (
                         <div className="text-slate-500 text-sm">
-                            <p>{t('insights.description')}</p>
+                            <p>Clique no botão para receber uma análise inteligente das suas finanças baseada nos seus gastos recentes.</p>
                         </div>
                     )}
                 </div>

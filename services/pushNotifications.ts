@@ -37,16 +37,18 @@ export function getNotificationPermission(): NotificationPermission {
  */
 export async function subscribeToPush(userId: string): Promise<boolean> {
     if (!isPushSupported()) {
-        console.warn('Push notifications are not supported in this browser.');
-        return false;
+        throw new Error('Seu navegador não suporta notificações push.');
     }
 
     try {
+        if (!VAPID_PUBLIC_KEY) {
+            throw new Error('Chave VAPID faltando no env. Reinicie o servidor Vite "npm run dev".');
+        }
+
         // Request permission
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') {
-            console.log('Notification permission denied.');
-            return false;
+            throw new Error('Permissão negada no navegador ou sistema. Verifique as configs do Xiaomi/Chrome.');
         }
 
         // Register service worker
@@ -57,11 +59,15 @@ export async function subscribeToPush(userId: string): Promise<boolean> {
         let subscription = await registration.pushManager.getSubscription();
 
         if (!subscription) {
-            // Subscribe to push
-            subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as unknown as BufferSource,
-            });
+            try {
+                // Subscribe to push
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as unknown as BufferSource,
+                });
+            } catch (err: any) {
+                throw new Error(`Falha ao registrar Push: ${err.message}`);
+            }
         }
 
         // Extract keys from subscription
@@ -84,15 +90,14 @@ export async function subscribeToPush(userId: string): Promise<boolean> {
             );
 
         if (error) {
-            console.error('Error saving push subscription:', error);
-            return false;
+            throw new Error(`Erro do Supabase: ${error.message} - Você rodou a migration SQL?`);
         }
 
         console.log('Successfully subscribed to push notifications.');
         return true;
     } catch (error) {
         console.error('Error subscribing to push:', error);
-        return false;
+        throw error; // Rethrow to show specific error in App.tsx
     }
 }
 

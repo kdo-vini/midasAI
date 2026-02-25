@@ -1,6 +1,5 @@
 import React from 'react';
 import { Transaction, TransactionCategory } from '../types';
-import { useTranslation } from 'react-i18next';
 
 interface DashboardStatsProps {
     transactions: Transaction[];
@@ -8,8 +7,6 @@ interface DashboardStatsProps {
 }
 
 export const DashboardStats: React.FC<DashboardStatsProps> = ({ transactions, currentDate }) => {
-    const { t, i18n } = useTranslation();
-
     // Filtrar transações do mês atual
     const currentMonthTransactions = transactions.filter(t => {
         const d = new Date(t.date);
@@ -54,9 +51,9 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ transactions, cu
     });
 
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat(i18n.language === 'pt' ? 'pt-BR' : 'en-US', {
+        return new Intl.NumberFormat('pt-BR', {
             style: 'currency',
-            currency: i18n.language === 'pt' ? 'BRL' : 'USD',
+            currency: 'BRL',
             minimumFractionDigits: 2
         }).format(amount);
     };
@@ -105,7 +102,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ transactions, cu
                 {!isIncome && !hideProgress && count > 0 && (
                     <div className="flex items-center justify-between text-sm">
                         <span className="text-slate-600 dark:text-slate-400">
-                            {t('dashboard.paid')}: {formatCurrency(paid)}
+                            Pago: {formatCurrency(paid)}
                         </span>
                         <span className={`font-medium ${paidCount === count ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
                             {Math.round((paidCount / count) * 100)}%
@@ -119,7 +116,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ transactions, cu
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <StatCard
-                title={t('dashboard.income')}
+                title="Receitas"
                 icon="💰"
                 total={stats.income.total}
                 paid={stats.income.paid}
@@ -132,7 +129,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ transactions, cu
             />
 
             <StatCard
-                title={t('dashboard.fixedExpenses')}
+                title="Despesas Fixas"
                 icon="🔴"
                 total={stats.fixed.total}
                 paid={stats.fixed.paid}
@@ -143,7 +140,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ transactions, cu
             />
 
             <StatCard
-                title={t('dashboard.variableExpenses')}
+                title="Despesas Variáveis"
                 icon="🟡"
                 total={stats.variable.total}
                 paid={stats.variable.paid}

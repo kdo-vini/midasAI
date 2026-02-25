@@ -1,14 +1,13 @@
 import React from 'react';
 import { X, Trash2 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 
 interface DeleteConfirmModalProps {
     isOpen: boolean;
     onClose: () => void;
     onDeleteSingle: () => void;
     onDeleteAll: () => void;
-    installmentInfo: string; // e.g., "Carro (5/30)"
-    totalInstallments?: number; // Total count in series
+    installmentInfo: string;
+    totalInstallments?: number;
 }
 
 export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
@@ -19,8 +18,6 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
     installmentInfo,
     totalInstallments
 }) => {
-    const { t } = useTranslation();
-
     if (!isOpen) return null;
 
     return (
@@ -29,7 +26,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
                     <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                        {t('deleteModal.title')}
+                        Excluir transação
                     </h2>
                     <button
                         onClick={onClose}
@@ -42,7 +39,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                 {/* Body */}
                 <div className="p-6">
                     <p className="text-slate-600 dark:text-slate-400 mb-6">
-                        {t('deleteModal.subtitle')}: <strong>{installmentInfo}</strong>
+                        Você quer excluir: <strong>{installmentInfo}</strong>
                     </p>
 
                     <div className="space-y-3">
@@ -55,7 +52,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                             className="w-full px-4 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 rounded-lg transition-colors flex items-center justify-center gap-2"
                         >
                             <Trash2 className="w-4 h-4" />
-                            {t('deleteModal.deleteSingle')}
+                            Apenas esta parcela
                         </button>
 
                         {/* Delete All Button */}
@@ -68,8 +65,8 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                         >
                             <Trash2 className="w-4 h-4" />
                             {totalInstallments
-                                ? t('deleteModal.deleteAllCount', { count: totalInstallments })
-                                : t('deleteModal.deleteAll')}
+                                ? `Toda a série (${totalInstallments} parcelas)`
+                                : 'Toda a série'}
                         </button>
                     </div>
                 </div>
@@ -80,7 +77,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                         onClick={onClose}
                         className="w-full px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
                     >
-                        {t('deleteModal.cancel')}
+                        Cancelar
                     </button>
                 </div>
             </div>

@@ -24,11 +24,11 @@ import { Settings, ChevronLeft, ChevronRight, LogOut, Loader2, Moon, Sun, Bell, 
 import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget, updateTransaction, deleteTransactionsByRecurringId, deleteTransactionsByInstallmentGroupId, fetchUserCategories, saveUserCategory, updateUserCategory, deleteUserCategory, fetchUserProfile, saveUserProfile, fetchStatementReports, fetchUserUsage, StatementReport, UserUsage } from './services/supabase';
 import { DEFAULT_CATEGORIES } from './constants/categories';
 import { Toaster, toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
+
 import { isPushSupported, isSubscribedToPush, subscribeToPush, unsubscribeFromPush } from './services/pushNotifications';
 
 const App: React.FC = () => {
-  const { t, i18n } = useTranslation();
+
   const [session, setSession] = useState<any>(null);
   const [loadingSession, setLoadingSession] = useState(true);
   const [view, setView] = useState<'landing' | 'login' | 'app' | 'update-password' | 'email-confirmed'>(() => {
@@ -164,7 +164,7 @@ const App: React.FC = () => {
       setUserUsage(usage);
     } catch (error) {
       console.error("Error loading data:", error);
-      toast.error(t('toasts.loadError'));
+      toast.error('Erro ao carregar dados.');
     } finally {
       setIsLoadingData(false);
     }
@@ -215,7 +215,7 @@ const App: React.FC = () => {
         for (const tx of newTransactions) {
           await saveTransaction(tx, session.user.id);
         }
-        toast.success(`${newTransactions.length} ${t('toasts.recurringAdded')}`);
+        toast.success(`${newTransactions.length} transações recorrentes adicionadas.`);
       }
     };
 
@@ -315,7 +315,7 @@ const App: React.FC = () => {
     }
 
     setTransactions(prev => [...transactionsToSave, ...prev]);
-    toast.success(installments > 1 ? `${installments} ${t('toasts.installmentsAdded')}` : t('toasts.transactionAdded'));
+    toast.success(installments > 1 ? `${installments} parcelas adicionadas!` : 'Transação adicionada!');
 
     try {
       for (const tx of transactionsToSave) {
@@ -329,7 +329,7 @@ const App: React.FC = () => {
       }
     } catch (error) {
       console.error("Error saving transaction:", error);
-      toast.error(t('toasts.saveError'));
+      toast.error('Erro ao salvar transação. Verifique sua conexão.');
     }
   };
 
@@ -345,13 +345,13 @@ const App: React.FC = () => {
     };
 
     setTransactions(prev => prev.map(t => t.id === id ? updatedTransaction : t));
-    toast.success(newIsPaid ? t('toasts.markedPaid') : t('toasts.markedUnpaid'));
+    toast.success(newIsPaid ? 'Marcado como pago!' : 'Desmarcado');
 
     try {
       await updateTransaction(updatedTransaction, session!.user.id);
     } catch (error) {
       console.error("Error updating payment status:", error);
-      toast.error(t('toasts.statusUpdateError'));
+      toast.error('Erro ao atualizar status.');
       // Revert on error
       setTransactions(prev => prev.map(t => t.id === id ? transaction : t));
     }
@@ -378,35 +378,35 @@ const App: React.FC = () => {
 
   const handleDeleteSingle = async (id: string) => {
     setTransactions(prev => prev.filter(t => t.id !== id));
-    toast.success(t('toasts.transactionRemoved'), { duration: 1000 });
+    toast.success('Transação removida.', { duration: 1000 });
     try {
       await deleteTransaction(id);
     } catch (error) {
       console.error("Error deleting:", error);
-      toast.error(t('toasts.deleteError'));
+      toast.error('Erro ao deletar.');
     }
   };
 
   const handleBulkDelete = async (groupId: string) => {
     const installmentCount = transactions.filter(t => t.installmentGroupId === groupId).length;
     setTransactions(prev => prev.filter(t => t.installmentGroupId !== groupId));
-    toast.success(t('toasts.seriesDeleted', { count: installmentCount }), { duration: 2000 });
+    toast.success(`${installmentCount} parcelas removidas.`, { duration: 2000 });
     try {
       await deleteTransactionsByInstallmentGroupId(groupId);
     } catch (error) {
       console.error("Error deleting installment series:", error);
-      toast.error(t('toasts.deleteError'));
+      toast.error('Erro ao deletar.');
     }
   };
 
   const handleCategoryChange = async (id: string, newCategory: string) => {
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, category: newCategory } : t));
-    toast.success(t('toasts.categoryUpdated'));
+    toast.success('Categoria atualizada.');
     try {
       await updateTransactionCategory(id, newCategory);
     } catch (error) {
       console.error("Error updating category:", error);
-      toast.error(t('toasts.categoryUpdateError'));
+      toast.error('Erro ao atualizar categoria.');
     }
   };
 
@@ -414,7 +414,7 @@ const App: React.FC = () => {
     if (!session?.user) return;
     const newItem: RecurringTransaction = { ...item, id: uuidv4() };
     setRecurringItems(prev => [...prev, newItem]);
-    toast.success(t('toasts.recurringSaved'));
+    toast.success('Item recorrente salvo.');
 
     try {
       await saveRecurring(newItem, session.user.id);
@@ -426,7 +426,7 @@ const App: React.FC = () => {
       }
     } catch (error) {
       console.error("Error saving recurring:", error);
-      toast.error(t('toasts.recurringSaveError'));
+      toast.error('Erro ao salvar recorrente.');
     }
   };
 
@@ -435,7 +435,7 @@ const App: React.FC = () => {
     setRecurringItems(prev => prev.filter(f => f.id !== id));
     setTransactions(prev => prev.filter(t => t.recurringId !== id)); // Remove associated transactions from UI
 
-    toast.success(t('toasts.recurringRemoved'));
+    toast.success('Item recorrente e histórico removidos.');
 
     try {
       await Promise.all([
@@ -444,7 +444,7 @@ const App: React.FC = () => {
       ]);
     } catch (error) {
       console.error("Error deleting recurring:", error);
-      toast.error(t('toasts.recurringDeleteError'));
+      toast.error('Erro ao deletar recorrente.');
       // Note: Reverting this complex state would require refetching or more complex undo logic
     }
   };
@@ -458,20 +458,20 @@ const App: React.FC = () => {
       }
       return [...prev, { category, targetPercentage: percentage }];
     });
-    toast.success(t('toasts.budgetUpdated'));
+    toast.success('Orçamento atualizado.');
 
     try {
       await saveBudget({ category, targetPercentage: percentage }, session.user.id);
     } catch (error) {
       console.error("Error saving budget:", error);
-      toast.error(t('toasts.budgetSaveError'));
+      toast.error('Erro ao salvar orçamento.');
     }
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setView('landing');
-    toast.success(t('toasts.loggedOut'));
+    toast.success('Você saiu da conta.');
   };
 
   // --- Category Management Handlers ---
@@ -481,10 +481,10 @@ const App: React.FC = () => {
       await saveUserCategory(name, session.user.id);
       const categories = await fetchUserCategories(session.user.id);
       setUserCategories(categories);
-      toast.success(t('toasts.categoryAdded'));
+      toast.success('Categoria adicionada!');
     } catch (error) {
       console.error("Error adding category:", error);
-      toast.error(t('toasts.categorySaveError'));
+      toast.error('Erro ao salvar categoria.');
     }
   };
 
@@ -494,10 +494,10 @@ const App: React.FC = () => {
       await updateUserCategory(id, name, session.user.id);
       const categories = await fetchUserCategories(session.user.id);
       setUserCategories(categories);
-      toast.success(t('toasts.categoryUpdated'));
+      toast.success('Categoria atualizada!');
     } catch (error) {
       console.error("Error updating category:", error);
-      toast.error(t('toasts.categoryUpdateError'));
+      toast.error('Erro ao atualizar categoria.');
     }
   };
 
@@ -505,10 +505,10 @@ const App: React.FC = () => {
     try {
       await deleteUserCategory(id);
       setUserCategories(prev => prev.filter(c => c.id !== id));
-      toast.success(t('toasts.categoryDeleted'));
+      toast.success('Categoria removida!');
     } catch (error) {
       console.error("Error deleting category:", error);
-      toast.error(t('toasts.categoryDeleteError'));
+      toast.error('Erro ao deletar categoria.');
     }
   };
 
@@ -519,10 +519,10 @@ const App: React.FC = () => {
       const profile = { userId: session.user.id, displayName };
       await saveUserProfile(profile);
       setUserProfile(profile);
-      toast.success(t('toasts.profileUpdated'));
+      toast.success('Perfil atualizado!');
     } catch (error) {
       console.error("Error saving profile:", error);
-      toast.error(t('toasts.profileSaveError'));
+      toast.error('Erro ao salvar perfil.');
     }
   };
 
@@ -534,19 +534,19 @@ const App: React.FC = () => {
       if (pushEnabled) {
         await unsubscribeFromPush(session.user.id);
         setPushEnabled(false);
-        toast.success(t('app.settings.notifications.disableSuccess'));
+        toast.success('Notificações desativadas.');
       } else {
-        const success = await subscribeToPush(session.user.id);
-        if (success) {
+        try {
+          await subscribeToPush(session.user.id);
           setPushEnabled(true);
-          toast.success(t('app.settings.notifications.enableSuccess'));
-        } else {
-          toast.error(t('app.settings.notifications.enableError'));
+          toast.success('Notificações ativadas! Você receberá lembretes das suas contas.');
+        } catch (err: any) {
+          toast.error(err.message || 'Erro ao ativar notificações. Verifique as permissões do navegador.', { duration: 6000 });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error toggling push:', error);
-      toast.error(t('app.settings.notifications.enableError'));
+      toast.error(error.message || 'Erro ao ativar notificações. Verifique as permissões do navegador.', { duration: 6000 });
     } finally {
       setPushLoading(false);
     }
@@ -586,7 +586,7 @@ const App: React.FC = () => {
     }));
   }, [currentMonthTransactions, stats.totalExpense]);
 
-  const monthLabel = new Intl.DateTimeFormat(i18n.language, { month: 'long', year: 'numeric' }).format(currentDate);
+  const monthLabel = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(currentDate);
 
   // Get category names from user categories
   const categoryNames = useMemo(() => userCategories.map(c => c.name), [userCategories]);
@@ -608,12 +608,12 @@ const App: React.FC = () => {
 
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200">{t('dashboard.latestTransactions')}</h2>
+                <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200">Últimas Transações</h2>
                 <button
                   onClick={() => setActiveTab('transactions')}
                   className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
-                  {t('dashboard.viewAll')}
+                  Ver todas
                 </button>
               </div>
               <div className="space-y-3">
@@ -630,7 +630,7 @@ const App: React.FC = () => {
                 ))}
                 {filteredTransactions.length === 0 && (
                   <div className="text-center py-10 text-slate-500 dark:text-slate-400">
-                    {t('dashboard.noRecentTransactions')}
+                    Nenhuma transação recente
                   </div>
                 )}
               </div>
@@ -642,9 +642,9 @@ const App: React.FC = () => {
         return (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">{t('dashboard.transactionsTitle')}</h2>
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Transações</h2>
               <span className="text-sm text-slate-500 dark:text-slate-400">
-                {filteredTransactions.length} {t('dashboard.items')}
+                {filteredTransactions.length} itens
               </span>
             </div>
 
@@ -659,7 +659,7 @@ const App: React.FC = () => {
                 <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
               ) : filteredTransactions.length === 0 ? (
                 <div className="text-center py-10 text-slate-500 dark:text-slate-400">
-                  {t('dashboard.noTransactionsInCategory')}
+                  Nenhuma transação nesta categoria
                 </div>
               ) : (
                 filteredTransactions.map(transaction => (
@@ -718,22 +718,22 @@ const App: React.FC = () => {
       case 'settings':
         return (
           <div className="space-y-6 animate-in fade-in duration-300">
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('app.profile.title')}</h2>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Perfil</h2>
 
             {/* Profile Info Section */}
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">{t('app.profile.personalInfo')}</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Informações Pessoais</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    {t('app.profile.displayName')}
+                    Nome para Exibição
                   </label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       value={userProfile?.displayName || ''}
                       onChange={(e) => setUserProfile(prev => prev ? { ...prev, displayName: e.target.value } : null)}
-                      placeholder={t('app.profile.displayNamePlaceholder')}
+                      placeholder="Como você gostaria de ser chamado?"
                       className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     />
                     <button
@@ -741,15 +741,15 @@ const App: React.FC = () => {
                       disabled={!userProfile?.displayName?.trim()}
                       className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
                     >
-                      {t('app.save')}
+                      Salvar
                     </button>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">{t('app.profile.displayNameHelper')}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">A IA usará este nome para personalizar as respostas</p>
                 </div>
 
                 <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    <span className="font-medium">{t('app.profile.email')}:</span> {session?.user?.email}
+                    <span className="font-medium">Email:</span> {session?.user?.email}
                   </p>
                 </div>
               </div>
@@ -758,7 +758,7 @@ const App: React.FC = () => {
             {/* Management Options */}
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
               <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t('app.profile.management')}</h3>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Gerenciamento</h3>
               </div>
 
               <button
@@ -770,8 +770,8 @@ const App: React.FC = () => {
                     <Settings className="w-5 h-5" />
                   </div>
                   <div className="text-left">
-                    <h4 className="font-medium text-slate-900 dark:text-slate-100">{t('app.settings.categories.title')}</h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{t('app.settings.categories.desc')}</p>
+                    <h4 className="font-medium text-slate-900 dark:text-slate-100">Gerenciar Categorias</h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Personalizar categorias de despesas</p>
                   </div>
                 </div>
                 <ChevronRight className="w-5 h-5 text-slate-400" />
@@ -786,8 +786,8 @@ const App: React.FC = () => {
                     <Settings className="w-5 h-5" />
                   </div>
                   <div className="text-left">
-                    <h4 className="font-medium text-slate-900 dark:text-slate-100">{t('app.settings.recurring.title')}</h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{t('app.settings.recurring.desc')}</p>
+                    <h4 className="font-medium text-slate-900 dark:text-slate-100">Gerenciar Recorrentes</h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Configurar salários e contas fixas</p>
                   </div>
                 </div>
                 <ChevronRight className="w-5 h-5 text-slate-400" />
@@ -802,15 +802,15 @@ const App: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${pushEnabled
-                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
-                        : 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+                      ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
+                      : 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
                       }`}>
                       {pushEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
                     </div>
                     <div className="text-left">
-                      <h4 className="font-medium text-slate-900 dark:text-slate-100">{t('app.settings.notifications.title')}</h4>
+                      <h4 className="font-medium text-slate-900 dark:text-slate-100">Notificações</h4>
                       <p className="text-sm text-slate-500 dark:text-slate-400">
-                        {pushEnabled ? t('app.settings.notifications.enabled') : t('app.settings.notifications.desc')}
+                        {pushEnabled ? 'Notificações ativadas' : 'Receba lembretes das suas contas a pagar'}
                       </p>
                     </div>
                   </div>
@@ -859,8 +859,8 @@ const App: React.FC = () => {
                     <LogOut className="w-5 h-5" />
                   </div>
                   <div className="text-left">
-                    <h4 className="font-medium text-red-600 dark:text-red-400">{t('app.settings.logout.title')}</h4>
-                    <p className="text-sm text-red-400/70">{t('app.settings.logout.desc')}</p>
+                    <h4 className="font-medium text-red-600 dark:text-red-400">Sair da Conta</h4>
+                    <p className="text-sm text-red-400/70">Encerrar sessão atual</p>
                   </div>
                 </div>
               </button>
@@ -945,19 +945,19 @@ const App: React.FC = () => {
                   onClick={() => setActiveTab('home')}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'home' ? 'bg-indigo-900/20 text-indigo-400' : 'text-slate-400 hover:bg-slate-800'}`}
                 >
-                  {t('app.nav.home')}
+                  Início
                 </button>
                 <button
                   onClick={() => setActiveTab('transactions')}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'transactions' ? 'bg-indigo-900/20 text-indigo-400' : 'text-slate-400 hover:bg-slate-800'}`}
                 >
-                  {t('app.nav.transactions')}
+                  Transações
                 </button>
                 <button
                   onClick={() => setActiveTab('reports')}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'reports' ? 'bg-indigo-900/20 text-indigo-400' : 'text-slate-400 hover:bg-slate-800'}`}
                 >
-                  {t('app.nav.reports')}
+                  Relatórios
                 </button>
                 <button
                   onClick={() => setActiveTab('import')}
@@ -972,7 +972,7 @@ const App: React.FC = () => {
                 <button
                   onClick={() => setActiveTab('settings')}
                   className="p-2 text-slate-400 hover:text-indigo-400 hover:bg-slate-700 transition-all rounded-lg"
-                  title={t('app.profile.title')}
+                  title="Perfil"
                 >
                   <Settings className="w-5 h-5" />
                 </button>
@@ -980,7 +980,7 @@ const App: React.FC = () => {
                 <button
                   onClick={handleLogout}
                   className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-900/20 transition-all rounded-lg"
-                  title={t('app.settings.logout.title')}
+                  title="Sair da Conta"
                 >
                   <LogOut className="w-5 h-5" />
                 </button>

@@ -35,13 +35,13 @@ export const parseTransactionFromText = async (
 };
 
 export const generateInsights = async (transactions: any[], budgetGoals: any[], language: string = 'pt'): Promise<string> => {
-    if (transactions.length === 0) return language === 'pt' ? "Adicione transações para receber insights personalizados." : "Add transactions to receive personalized insights.";
+    if (transactions.length === 0) return "Adicione transações para receber insights personalizados.";
 
     try {
         const { data, error } = await supabase.functions.invoke('ai-proxy', {
             body: {
                 type: 'insight',
-                transactions: transactions.slice(0, 10), // Limit to last 10 for performance
+                transactions: transactions.slice(0, 10),
                 budgetGoals,
                 language
             }
@@ -49,10 +49,10 @@ export const generateInsights = async (transactions: any[], budgetGoals: any[], 
 
         if (error) throw error;
 
-        return data?.content || (language === 'pt' ? "Sem insights no momento." : "No insights at the moment.");
+        return data?.content || "Sem insights no momento.";
     } catch (error) {
         console.error("AI Insight Error:", error);
-        return language === 'pt' ? "Não foi possível gerar insights agora." : "Could not generate insights right now.";
+        return "Não foi possível gerar insights agora.";
     }
 };
 

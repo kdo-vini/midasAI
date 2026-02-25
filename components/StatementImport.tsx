@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { Upload, FileSpreadsheet, Loader2, History, ChevronRight, AlertCircle } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+
 import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
 import { parseStatementWithAI, StatementReport } from '../services/supabase';
@@ -30,7 +30,7 @@ export const StatementImport: React.FC<StatementImportProps> = ({
     onReportGenerated,
     onViewReport
 }) => {
-    const { t } = useTranslation();
+
     const [isDragging, setIsDragging] = useState(false);
     const [files, setFiles] = useState<File[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);

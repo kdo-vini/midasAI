@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Sparkles, User, Loader2 } from 'lucide-react';
 import { sendChatMessage } from '../services/openaiService';
 import { Transaction, BudgetGoal, MonthlyStats } from '../types';
-import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 
@@ -18,7 +17,6 @@ interface Message {
 }
 
 export const FloatingChat: React.FC<FloatingChatProps> = ({ transactions, budgetGoals, monthlyStats }) => {
-    const { i18n } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
@@ -51,7 +49,7 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({ transactions, budget
                 transactions,
                 budgetGoals,
                 monthlyStats,
-                i18n.language
+                'pt'
             );
 
             setMessages(prev => [...prev, { role: 'assistant', content: response }]);
@@ -96,9 +94,7 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({ transactions, budget
                             <div className="h-full flex flex-col items-center justify-center text-center opacity-40 p-6">
                                 <Sparkles className="w-8 h-8 text-slate-500 mb-3" />
                                 <p className="text-sm text-slate-400">
-                                    {i18n.language.startsWith('pt')
-                                        ? "Olá! Sou seu assistente financeiro. Pergunte sobre seus gastos, investimentos ou peça dicas de economia."
-                                        : "Hi! I'm your financial assistant. Ask about your spending, investments, or tips to save money."}
+                                    Olá! Sou seu assistente financeiro. Pergunte sobre seus gastos, investimentos ou peça dicas de economia.
                                 </p>
                             </div>
                         )}
@@ -154,7 +150,7 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({ transactions, budget
                                 type="text"
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
-                                placeholder={i18n.language.startsWith('pt') ? "Digite sua mensagem..." : "Type your message..."}
+                                placeholder="Digite sua mensagem..."
                                 className="flex-1 bg-[#050505] border border-[#222] rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#FFD700]/50 transition-colors"
                             />
                             <button
