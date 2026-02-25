@@ -60,13 +60,23 @@ export async function subscribeToPush(userId: string): Promise<boolean> {
 
         if (!subscription) {
             try {
+                const keyArray = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+                console.log('[Push] VAPID key length:', VAPID_PUBLIC_KEY.length, '| Uint8Array length:', keyArray.length);
+                console.log('[Push] VAPID key preview:', VAPID_PUBLIC_KEY.substring(0, 20) + '...');
                 // Subscribe to push
                 subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as unknown as BufferSource,
+                    applicationServerKey: keyArray.buffer as ArrayBuffer,
                 });
             } catch (err: any) {
-                throw new Error(`Falha ao registrar Push: ${err.message}`);
+                console.error('[Push] Subscribe error:', err);
+                // On some devices (Xiaomi/MIUI), FCM may be blocked or Google Play Services outdated
+                throw new Error(
+                    `Falha ao registrar Push: ${err.message}. ` +
+                    `Verifique: 1) Google Play Services atualizado, ` +
+                    `2) Notificações do Chrome permitidas nas configurações do Android, ` +
+                    `3) Xiaomi: Segurança > Gerenciar apps > Chrome > Notificações ativadas`
+                );
             }
         }
 
