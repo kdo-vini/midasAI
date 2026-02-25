@@ -30,7 +30,14 @@ const App: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [session, setSession] = useState<any>(null);
   const [loadingSession, setLoadingSession] = useState(true);
-  const [view, setView] = useState<'landing' | 'login' | 'app' | 'update-password' | 'email-confirmed'>('landing');
+  const [view, setView] = useState<'landing' | 'login' | 'app' | 'update-password' | 'email-confirmed'>(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      if (hash.includes('type=recovery')) return 'update-password';
+      if (hash.includes('type=signup')) return 'email-confirmed';
+    }
+    return 'landing';
+  });
 
   // --- State ---
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -85,13 +92,11 @@ const App: React.FC = () => {
       }
       setSession(session);
 
-      const hash = window.location.hash;
-      if (hash && hash.includes('type=recovery')) {
-        setView('update-password');
-      } else if (hash && hash.includes('type=signup')) {
-        setView('email-confirmed');
-      } else if (session) {
-        setView('app'); // Auto-route to app if logged in
+      if (session) {
+        setView(current => {
+          if (current === 'update-password' || current === 'email-confirmed') return current;
+          return 'app'; // Auto-route to app if logged in and not in a special flow
+        });
       }
 
       setLoadingSession(false);
