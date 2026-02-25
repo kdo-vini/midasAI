@@ -32,6 +32,18 @@
             "categories": {
                 "title": "Gerenciar Categorias",
                 "desc": "Personalizar categorias de despesas"
+            },
+            "notifications": {
+                "title": "Notificações",
+                "desc": "Receba lembretes das suas contas a pagar",
+                "enabled": "Notificações ativadas",
+                "disabled": "Ativar notificações",
+                "notSupported": "Seu navegador não suporta notificações push",
+                "iosHint": "No iPhone, adicione o app à tela inicial para receber notificações",
+                "enableSuccess": "Notificações ativadas! Você receberá lembretes das suas contas.",
+                "enableError": "Erro ao ativar notificações. Verifique as permissões do navegador.",
+                "disableSuccess": "Notificações desativadas.",
+                "permissionDenied": "Permissão negada. Habilite nas configurações do navegador."
             }
         },
         "profile": {

@@ -32,6 +32,18 @@
             "categories": {
                 "title": "Manage Categories",
                 "desc": "Customize expense categories"
+            },
+            "notifications": {
+                "title": "Notifications",
+                "desc": "Receive reminders for your bills",
+                "enabled": "Notifications enabled",
+                "disabled": "Enable notifications",
+                "notSupported": "Your browser does not support push notifications",
+                "iosHint": "On iPhone, add the app to your home screen to receive notifications",
+                "enableSuccess": "Notifications enabled! You will receive bill reminders.",
+                "enableError": "Error enabling notifications. Check browser permissions.",
+                "disableSuccess": "Notifications disabled.",
+                "permissionDenied": "Permission denied. Enable in browser settings."
             }
         },
         "profile": {

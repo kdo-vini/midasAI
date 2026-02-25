@@ -20,11 +20,12 @@ import { CategoryManager } from './components/CategoryManager';
 import { StatementImport } from './components/StatementImport';
 import { StatementReportView } from './components/StatementReportView';
 import { Transaction, TransactionType, TransactionCategory, AIParsedTransaction, RecurringTransaction, CategoryStat, BudgetGoal, UserCategory, UserProfile } from './types';
-import { Settings, ChevronLeft, ChevronRight, LogOut, Loader2, Moon, Sun } from 'lucide-react';
+import { Settings, ChevronLeft, ChevronRight, LogOut, Loader2, Moon, Sun, Bell, BellOff } from 'lucide-react';
 import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget, updateTransaction, deleteTransactionsByRecurringId, deleteTransactionsByInstallmentGroupId, fetchUserCategories, saveUserCategory, updateUserCategory, deleteUserCategory, fetchUserProfile, saveUserProfile, fetchStatementReports, fetchUserUsage, StatementReport, UserUsage } from './services/supabase';
 import { DEFAULT_CATEGORIES } from './constants/categories';
 import { Toaster, toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { isPushSupported, isSubscribedToPush, subscribeToPush, unsubscribeFromPush } from './services/pushNotifications';
 
 const App: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -72,6 +73,10 @@ const App: React.FC = () => {
   const [statementReports, setStatementReports] = useState<StatementReport[]>([]);
   const [userUsage, setUserUsage] = useState<UserUsage>({ reports_this_month: 0, last_reset_month: 0 });
   const [viewingReport, setViewingReport] = useState<StatementReport | null>(null);
+
+  // Push notification state
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
 
   // --- Dark Mode Effect ---
   useEffect(() => {
@@ -133,6 +138,8 @@ const App: React.FC = () => {
   useEffect(() => {
     if (session?.user) {
       loadData(session.user.id);
+      // Check push notification status
+      isSubscribedToPush().then(setPushEnabled);
     }
   }, [session]);
 
@@ -519,6 +526,32 @@ const App: React.FC = () => {
     }
   };
 
+  // --- Push Notification Toggle ---
+  const handleTogglePush = async () => {
+    if (!session?.user) return;
+    setPushLoading(true);
+    try {
+      if (pushEnabled) {
+        await unsubscribeFromPush(session.user.id);
+        setPushEnabled(false);
+        toast.success(t('app.settings.notifications.disableSuccess'));
+      } else {
+        const success = await subscribeToPush(session.user.id);
+        if (success) {
+          setPushEnabled(true);
+          toast.success(t('app.settings.notifications.enableSuccess'));
+        } else {
+          toast.error(t('app.settings.notifications.enableError'));
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling push:', error);
+      toast.error(t('app.settings.notifications.enableError'));
+    } finally {
+      setPushLoading(false);
+    }
+  };
+
   const stats = useMemo(() => {
     const income = currentMonthTransactions
       .filter(t => t.type === TransactionType.INCOME)
@@ -759,6 +792,41 @@ const App: React.FC = () => {
                 </div>
                 <ChevronRight className="w-5 h-5 text-slate-400" />
               </button>
+
+              {/* Push Notifications Toggle */}
+              {isPushSupported() && (
+                <button
+                  onClick={handleTogglePush}
+                  disabled={pushLoading}
+                  className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-200 dark:border-slate-700"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${pushEnabled
+                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+                      }`}>
+                      {pushEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+                    </div>
+                    <div className="text-left">
+                      <h4 className="font-medium text-slate-900 dark:text-slate-100">{t('app.settings.notifications.title')}</h4>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                        {pushEnabled ? t('app.settings.notifications.enabled') : t('app.settings.notifications.desc')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {pushLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+                    ) : (
+                      <div className={`w-11 h-6 rounded-full relative transition-colors ${pushEnabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                        }`}>
+                        <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${pushEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                          }`} />
+                      </div>
+                    )}
+                  </div>
+                </button>
+              )}
 
               <button
                 onClick={() => {
