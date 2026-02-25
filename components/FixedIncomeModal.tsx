@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, CalendarClock, Plus, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { RecurringTransaction, TransactionType } from '../types';
-import { DEFAULT_CATEGORIES } from '../constants/categories';
+import { DEFAULT_INCOME_CATEGORIES, DEFAULT_EXPENSE_CATEGORIES } from '../constants/categories';
 
 interface RecurringModalProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ export const FixedIncomeModal: React.FC<RecurringModalProps> = ({ isOpen, onClos
   const [amount, setAmount] = useState('');
   const [day, setDay] = useState('');
   const [type, setType] = useState<TransactionType>(TransactionType.EXPENSE);
-  const [category, setCategory] = useState(DEFAULT_CATEGORIES[0]);
+  const [category, setCategory] = useState(DEFAULT_EXPENSE_CATEGORIES[0]);
 
   if (!isOpen) return null;
 
@@ -33,7 +33,7 @@ export const FixedIncomeModal: React.FC<RecurringModalProps> = ({ isOpen, onClos
     setName('');
     setAmount('');
     setDay('');
-    setCategory(DEFAULT_CATEGORIES[0]);
+    setCategory(type === TransactionType.INCOME ? DEFAULT_INCOME_CATEGORIES[0] : DEFAULT_EXPENSE_CATEGORIES[0]);
   };
 
   const formatCurrency = (value: number) => {
@@ -89,14 +89,20 @@ export const FixedIncomeModal: React.FC<RecurringModalProps> = ({ isOpen, onClos
             <div className="flex gap-2 mb-4">
               <button
                 type="button"
-                onClick={() => setType(TransactionType.INCOME)}
+                onClick={() => {
+                  setType(TransactionType.INCOME);
+                  setCategory(DEFAULT_INCOME_CATEGORIES[0]);
+                }}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${type === TransactionType.INCOME ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200 dark:shadow-none' : 'bg-white dark:bg-slate-850 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600'}`}
               >
                 Entrada Fixa
               </button>
               <button
                 type="button"
-                onClick={() => setType(TransactionType.EXPENSE)}
+                onClick={() => {
+                  setType(TransactionType.EXPENSE);
+                  setCategory(DEFAULT_EXPENSE_CATEGORIES[0]);
+                }}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${type === TransactionType.EXPENSE ? 'bg-rose-500 text-white shadow-lg shadow-rose-200 dark:shadow-none' : 'bg-white dark:bg-slate-850 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600'}`}
               >
                 Gasto Fixo
@@ -151,7 +157,7 @@ export const FixedIncomeModal: React.FC<RecurringModalProps> = ({ isOpen, onClos
                 className="w-full rounded-lg border-slate-200 dark:border-slate-600 p-2.5 bg-white dark:bg-slate-850 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:outline-none appearance-none"
                 required
               >
-                {DEFAULT_CATEGORIES.map(cat => (
+                {(type === TransactionType.INCOME ? DEFAULT_INCOME_CATEGORIES : DEFAULT_EXPENSE_CATEGORIES).map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>

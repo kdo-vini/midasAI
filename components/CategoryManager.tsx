@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { X, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
-import { UserCategory } from '../types';
+import { UserCategory, TransactionType } from '../types';
 import { Transaction } from '../types';
 
 interface CategoryManagerProps {
     isOpen: boolean;
     onClose: () => void;
     categories: UserCategory[];
-    onAdd: (name: string) => void;
+    onAdd: (name: string, type: 'INCOME' | 'EXPENSE') => void;
     onUpdate: (id: string, name: string) => void;
     onDelete: (id: string) => void;
     transactions: Transaction[];
@@ -25,6 +25,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
     const [newCategoryName, setNewCategoryName] = useState('');
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editingName, setEditingName] = useState('');
+    const [activeTab, setActiveTab] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
 
     if (!isOpen) return null;
 
@@ -35,12 +36,12 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
     const handleAdd = () => {
         if (!newCategoryName.trim()) return;
 
-        if (categories.some(c => c.name.toLowerCase() === newCategoryName.trim().toLowerCase())) {
+        if (categories.some(c => c.name.toLowerCase() === newCategoryName.trim().toLowerCase() && c.type === activeTab)) {
             alert('Já existe uma categoria com este nome');
             return;
         }
 
-        onAdd(newCategoryName.trim());
+        onAdd(newCategoryName.trim(), activeTab);
         setNewCategoryName('');
     };
 
@@ -88,6 +89,22 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
 
                 {/* Body - Scrollable */}
                 <div className="flex-1 overflow-y-auto p-6">
+                    {/* Tabs */}
+                    <div className="flex gap-2 mb-6 border-b border-slate-200 dark:border-slate-700">
+                        <button
+                            onClick={() => setActiveTab('EXPENSE')}
+                            className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${activeTab === 'EXPENSE' ? 'border-rose-500 text-rose-600 dark:text-rose-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'}`}
+                        >
+                            Gastos / Saídas
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('INCOME')}
+                            className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${activeTab === 'INCOME' ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'}`}
+                        >
+                            Receitas / Entradas
+                        </button>
+                    </div>
+
                     {/* Add New Category */}
                     <div className="mb-6">
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -116,10 +133,10 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                     {/* Categories List */}
                     <div>
                         <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                            Suas categorias ({categories.length})
+                            Suas categorias ({categories.filter(c => c.type === activeTab).length})
                         </h3>
                         <div className="space-y-2">
-                            {categories.map(category => {
+                            {categories.filter(c => c.type === activeTab).map(category => {
                                 const usageCount = getCategoryUsageCount(category.name);
                                 const isEditing = editingId === category.id;
 

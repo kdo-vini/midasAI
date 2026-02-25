@@ -6,10 +6,11 @@ interface StatsCardsProps {
     stats: MonthlyStats;
     categoryStats: CategoryStat[];
     budgetGoals: BudgetGoal[];
+    userCategories: string[];
     onUpdateBudget: (category: string, percentage: number) => void;
 }
 
-export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, budgetGoals, onUpdateBudget }) => {
+export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, budgetGoals, userCategories, onUpdateBudget }) => {
     const [editingCategory, setEditingCategory] = useState<string | null>(null);
     const [tempPercent, setTempPercent] = useState<string>('');
 
@@ -24,24 +25,32 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
         .filter(c => c.type === TransactionType.EXPENSE && c.amount > 0)
         .sort((a, b) => b.amount - a.amount);
 
-    // Budget report - only categories with actual spending
-    const budgetReport = budgetGoals.map(goal => {
-        const actual = categoryStats.find(c => c.category === goal.category)?.amount || 0;
+    // Budget report - combines all valid expense categories
+    const allCategories = Array.from(new Set([
+        ...userCategories,
+        ...budgetGoals.map(g => g.category),
+        ...categoryStats.filter(c => c.type === TransactionType.EXPENSE).map(c => c.category)
+    ])).filter(c => !c.toLowerCase().includes('receita') && !c.toLowerCase().includes('salário') && !c.toLowerCase().includes('salario'));
+
+    const budgetReport = allCategories.map(category => {
+        const goal = budgetGoals.find(g => g.category === category) || { targetPercentage: 0 };
+        const actual = categoryStats.find(c => c.category === category)?.amount || 0;
         const budgetAmount = (stats.totalIncome * goal.targetPercentage) / 100;
         const remaining = budgetAmount - actual;
         const usagePercent = budgetAmount > 0 ? (actual / budgetAmount) * 100 : (actual > 0 ? 100 : 0);
 
         return {
-            category: goal.category,
+            category: category,
             targetPercent: goal.targetPercentage,
             budgetAmount,
             actualAmount: actual,
             remaining,
             usagePercent
         };
-    })
-        .filter(item => item.actualAmount > 0) // Only show categories with actual spending
-        .sort((a, b) => b.actualAmount - a.actualAmount);
+    }).sort((a, b) => {
+        if (b.targetPercent !== a.targetPercent) return b.targetPercent - a.targetPercent;
+        return b.actualAmount - a.actualAmount;
+    });
 
     const startEdit = (cat: string, current: number) => {
         setEditingCategory(cat);

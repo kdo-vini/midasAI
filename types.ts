@@ -56,6 +56,7 @@ export interface UserCategory {
   id: string;
   name: string;
   isDefault: boolean;
+  type?: TransactionType; // Type of category ('INCOME' | 'EXPENSE')
 }
 
 export interface UserProfile {

@@ -207,14 +207,15 @@ export const fetchUserCategories = async (userId: string) => {
     return data.map((c: any) => ({
         id: c.id,
         name: c.name,
-        isDefault: c.is_default
+        isDefault: c.is_default,
+        type: c.type
     })) as UserCategory[];
 };
 
-export const saveUserCategory = async (name: string, userId: string) => {
+export const saveUserCategory = async (name: string, type: 'INCOME' | 'EXPENSE', userId: string) => {
     const { error } = await supabase
         .from('user_categories')
-        .insert([{ name, user_id: userId, is_default: false }]);
+        .insert([{ name, type, user_id: userId, is_default: false }]);
 
     if (error) throw error;
 };

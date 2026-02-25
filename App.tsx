@@ -22,7 +22,7 @@ import { StatementReportView } from './components/StatementReportView';
 import { Transaction, TransactionType, TransactionCategory, AIParsedTransaction, RecurringTransaction, CategoryStat, BudgetGoal, UserCategory, UserProfile } from './types';
 import { Settings, ChevronLeft, ChevronRight, LogOut, Loader2, Moon, Sun, Bell, BellOff } from 'lucide-react';
 import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget, updateTransaction, deleteTransactionsByRecurringId, deleteTransactionsByInstallmentGroupId, fetchUserCategories, saveUserCategory, updateUserCategory, deleteUserCategory, fetchUserProfile, saveUserProfile, fetchStatementReports, fetchUserUsage, StatementReport, UserUsage } from './services/supabase';
-import { DEFAULT_CATEGORIES } from './constants/categories';
+import { DEFAULT_INCOME_CATEGORIES, DEFAULT_EXPENSE_CATEGORIES } from './constants/categories';
 import { Toaster, toast } from 'sonner';
 
 import { isPushSupported, isSubscribedToPush, subscribeToPush, unsubscribeFromPush } from './services/pushNotifications';
@@ -475,10 +475,10 @@ const App: React.FC = () => {
   };
 
   // --- Category Management Handlers ---
-  const handleAddCategory = async (name: string) => {
+  const handleAddCategory = async (name: string, type: 'INCOME' | 'EXPENSE') => {
     if (!session?.user) return;
     try {
-      await saveUserCategory(name, session.user.id);
+      await saveUserCategory(name, type, session.user.id);
       const categories = await fetchUserCategories(session.user.id);
       setUserCategories(categories);
       toast.success('Categoria adicionada!');
@@ -589,7 +589,13 @@ const App: React.FC = () => {
   const monthLabel = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(currentDate);
 
   // Get category names from user categories
-  const categoryNames = useMemo(() => userCategories.map(c => c.name), [userCategories]);
+  const expenseCategoryNames = useMemo(() => userCategories.filter(c => c.type === 'EXPENSE').map(c => c.name), [userCategories]);
+  const incomeCategoryNames = useMemo(() => userCategories.filter(c => c.type === 'INCOME').map(c => c.name), [userCategories]);
+
+  const allExpenseCategories = expenseCategoryNames.length > 0 ? expenseCategoryNames : DEFAULT_EXPENSE_CATEGORIES;
+  const allIncomeCategories = incomeCategoryNames.length > 0 ? incomeCategoryNames : DEFAULT_INCOME_CATEGORIES;
+
+  const allCategories = [...allExpenseCategories, ...allIncomeCategories];
 
   const renderContent = () => {
     switch (activeTab) {
@@ -598,7 +604,7 @@ const App: React.FC = () => {
           <div className="space-y-6 animate-in fade-in duration-300">
             <SmartInput
               onTransactionParsed={handleAITransaction}
-              categories={categoryNames.length > 0 ? categoryNames : DEFAULT_CATEGORIES}
+              categories={allCategories}
               currentDate={currentDate}
               transactions={currentMonthTransactions}
               budgetGoals={budgetGoals}
@@ -685,6 +691,7 @@ const App: React.FC = () => {
               stats={stats}
               categoryStats={categoryStats}
               budgetGoals={budgetGoals}
+              userCategories={allExpenseCategories}
               onUpdateBudget={handleUpdateBudget}
             />
           </div>
