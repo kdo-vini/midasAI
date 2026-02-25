@@ -30,7 +30,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, categoryStats, bu
         ...userCategories,
         ...budgetGoals.map(g => g.category),
         ...categoryStats.filter(c => c.type === TransactionType.EXPENSE).map(c => c.category)
-    ])).filter(c => !c.toLowerCase().includes('receita') && !c.toLowerCase().includes('salário') && !c.toLowerCase().includes('salario'));
+    ]));
 
     const budgetReport = allCategories.map(category => {
         const goal = budgetGoals.find(g => g.category === category) || { targetPercentage: 0 };
