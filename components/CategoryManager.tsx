@@ -27,6 +27,13 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
     const [editingName, setEditingName] = useState('');
     const [activeTab, setActiveTab] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
 
+    const ghostCategories = Array.from(new Set(
+        transactions
+            .filter(t => t.type === activeTab)
+            .map(t => t.category)
+    )).filter(catName => !categories.some(c => c.name.toLowerCase() === catName.toLowerCase() && c.type === activeTab))
+        .filter(cat => cat && cat.trim() !== '');
+
     if (!isOpen) return null;
 
     const getCategoryUsageCount = (categoryName: string) => {
@@ -217,6 +224,49 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                             })}
                         </div>
                     </div>
+
+                    {/* Ghost Categories (Used in transactions but not registered) */}
+                    {ghostCategories.length > 0 && (
+                        <div className="mt-8">
+                            <h3 className="text-sm font-medium text-amber-700 dark:text-amber-400 mb-2 flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4" />
+                                Categorias em uso não cadastradas ({ghostCategories.length})
+                            </h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                                Estas categorias foram criadas por transações antigas ou pela Inteligência Artificial, mas não estão na sua lista oficial acima. Você pode adicioná-las para conseguir editá-las ou apagá-las depois.
+                            </p>
+                            <div className="space-y-2">
+                                {ghostCategories.map(catName => {
+                                    const usageCount = getCategoryUsageCount(catName);
+                                    return (
+                                        <div
+                                            key={catName}
+                                            className="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-800/30"
+                                        >
+                                            <div className="flex-1">
+                                                <div className="font-medium text-slate-900 dark:text-slate-100">
+                                                    {catName}
+                                                </div>
+                                                <div className="text-xs text-slate-500 dark:text-slate-400">
+                                                    Usada em {usageCount} transações
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    onAdd(catName, activeTab);
+                                                }}
+                                                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                                                title="Adicionar à lista oficial"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                                Cadastrar Oficialmente
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Info Box */}
                     <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
