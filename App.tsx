@@ -14,6 +14,8 @@ import { BottomNav, TabType } from './components/BottomNav';
 import { Logo } from './components/Logo';
 import { FloatingChat } from './components/FloatingChat';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
+import { UpdatePassword } from './components/UpdatePassword';
+import { EmailConfirmed } from './components/EmailConfirmed';
 import { CategoryManager } from './components/CategoryManager';
 import { StatementImport } from './components/StatementImport';
 import { StatementReportView } from './components/StatementReportView';
@@ -28,7 +30,7 @@ const App: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [session, setSession] = useState<any>(null);
   const [loadingSession, setLoadingSession] = useState(true);
-  const [view, setView] = useState<'landing' | 'login' | 'app'>('landing');
+  const [view, setView] = useState<'landing' | 'login' | 'app' | 'update-password' | 'email-confirmed'>('landing');
 
   // --- State ---
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -82,16 +84,41 @@ const App: React.FC = () => {
         }
       }
       setSession(session);
-      if (session) setView('app'); // Auto-route to app if logged in
+
+      const hash = window.location.hash;
+      if (hash && hash.includes('type=recovery')) {
+        setView('update-password');
+      } else if (hash && hash.includes('type=signup')) {
+        setView('email-confirmed');
+      } else if (session) {
+        setView('app'); // Auto-route to app if logged in
+      }
+
       setLoadingSession(false);
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
-      if (session) setView('app');
-      else if (view === 'app') setView('landing'); // Go to landing on logout
+
+      if (event === 'PASSWORD_RECOVERY') {
+        setView('update-password');
+      } else if (event === 'SIGNED_IN') {
+        const hash = window.location.hash;
+        if (hash && hash.includes('type=signup')) {
+          // Need to clear the hash to prevent getting stuck on refresh
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          setView('email-confirmed');
+        } else {
+          setView(current => {
+            if (current === 'update-password' || current === 'email-confirmed') return current;
+            return 'app';
+          });
+        }
+      } else if (!session) {
+        setView(current => current === 'app' ? 'landing' : current); // Go to landing on logout
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -780,6 +807,20 @@ const App: React.FC = () => {
   }
 
   // --- RENDERING VIEWS ---
+
+  if (view === 'update-password') {
+    return <UpdatePassword onSuccess={() => setView('login')} />;
+  }
+
+  if (view === 'email-confirmed') {
+    return <EmailConfirmed onContinue={() => {
+      if (session) {
+        setView('app');
+      } else {
+        setView('login');
+      }
+    }} />;
+  }
 
   if (!session) {
     if (view === 'landing') {
