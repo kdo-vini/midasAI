@@ -147,6 +147,24 @@ export const deleteRecurring = async (id: string) => {
     if (error) throw error;
 };
 
+export const updateTransactionsCategory = async (oldCategory: string, newCategory: string, userId: string) => {
+    const { error } = await supabase
+        .from('transactions')
+        .update({ category: newCategory })
+        .match({ category: oldCategory, user_id: userId });
+
+    if (error) throw error;
+};
+
+export const deleteTransactionsByCategory = async (category: string, userId: string) => {
+    const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .match({ category, user_id: userId });
+
+    if (error) throw error;
+};
+
 export const deleteTransactionsByRecurringId = async (recurringId: string) => {
     const { error } = await supabase
         .from('transactions')

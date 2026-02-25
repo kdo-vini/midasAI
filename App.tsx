@@ -21,7 +21,7 @@ import { StatementImport } from './components/StatementImport';
 import { StatementReportView } from './components/StatementReportView';
 import { Transaction, TransactionType, TransactionCategory, AIParsedTransaction, RecurringTransaction, CategoryStat, BudgetGoal, UserCategory, UserProfile } from './types';
 import { Settings, ChevronLeft, ChevronRight, LogOut, Loader2, Moon, Sun, Bell, BellOff } from 'lucide-react';
-import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget, updateTransaction, deleteTransactionsByRecurringId, deleteTransactionsByInstallmentGroupId, fetchUserCategories, saveUserCategory, updateUserCategory, deleteUserCategory, fetchUserProfile, saveUserProfile, fetchStatementReports, fetchUserUsage, StatementReport, UserUsage } from './services/supabase';
+import { supabase, fetchTransactions, saveTransaction, deleteTransaction, updateTransactionCategory, fetchRecurring, saveRecurring, deleteRecurring, fetchBudgets, saveBudget, updateTransaction, deleteTransactionsByRecurringId, deleteTransactionsByInstallmentGroupId, fetchUserCategories, saveUserCategory, updateUserCategory, deleteUserCategory, updateTransactionsCategory, deleteTransactionsByCategory, fetchUserProfile, saveUserProfile, fetchStatementReports, fetchUserUsage, StatementReport, UserUsage } from './services/supabase';
 import { DEFAULT_INCOME_CATEGORIES, DEFAULT_EXPENSE_CATEGORIES } from './constants/categories';
 import { Toaster, toast } from 'sonner';
 
@@ -509,6 +509,48 @@ const App: React.FC = () => {
     } catch (error) {
       console.error("Error deleting category:", error);
       toast.error('Erro ao deletar categoria.');
+    }
+  };
+
+  const handleReassignAndDeleteCategory = async (categoryId: string | null, oldName: string, newName: string) => {
+    if (!session?.user) return;
+    try {
+      if (categoryId) {
+        await deleteUserCategory(categoryId);
+      }
+      await updateTransactionsCategory(oldName, newName, session.user.id);
+
+      const newTransactions = await fetchTransactions(session.user.id);
+      setTransactions(newTransactions || []);
+
+      if (categoryId) {
+        setUserCategories(prev => prev.filter(c => c.id !== categoryId));
+      }
+      toast.success('Categoria excluída e transações reatribuídas!');
+    } catch (error) {
+      console.error("Error reassigning category:", error);
+      toast.error('Erro ao processar exclusão.');
+    }
+  };
+
+  const handleDeleteCategoryCascading = async (categoryId: string | null, categoryName: string) => {
+    if (!session?.user) return;
+    try {
+      if (categoryId) {
+        await deleteUserCategory(categoryId);
+      }
+      await deleteTransactionsByCategory(categoryName, session.user.id);
+
+      const newTransactions = await fetchTransactions(session.user.id);
+      setTransactions(newTransactions || []);
+
+      if (categoryId) {
+        setUserCategories(prev => prev.filter(c => c.id !== categoryId));
+      }
+      toast.success('Categoria e transações excluídas!');
+    } catch (error) {
+      console.error("Error deleting category cascading:", error);
+      toast.error('Erro ao excluir em cascata.');
     }
   };
 
@@ -1048,6 +1090,8 @@ const App: React.FC = () => {
         onAdd={handleAddCategory}
         onUpdate={handleUpdateCategory}
         onDelete={handleDeleteCategory}
+        onDeleteCascading={handleDeleteCategoryCascading}
+        onReassignAndDelete={handleReassignAndDeleteCategory}
         transactions={transactions}
       />
     </div>

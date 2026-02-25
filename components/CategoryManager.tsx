@@ -3,6 +3,7 @@ import { X, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { UserCategory, TransactionType } from '../types';
 import { Transaction } from '../types';
 import { toast } from 'sonner';
+import { CategoryDeleteModal } from './CategoryDeleteModal';
 
 interface CategoryManagerProps {
     isOpen: boolean;
@@ -11,6 +12,8 @@ interface CategoryManagerProps {
     onAdd: (name: string, type: 'INCOME' | 'EXPENSE') => void;
     onUpdate: (id: string, name: string) => void;
     onDelete: (id: string) => void;
+    onDeleteCascading: (categoryId: string | null, categoryName: string) => void;
+    onReassignAndDelete: (categoryId: string | null, oldName: string, newName: string) => void;
     transactions: Transaction[];
 }
 
@@ -21,12 +24,18 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
     onAdd,
     onUpdate,
     onDelete,
+    onDeleteCascading,
+    onReassignAndDelete,
     transactions
 }) => {
     const [newCategoryName, setNewCategoryName] = useState('');
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editingName, setEditingName] = useState('');
     const [activeTab, setActiveTab] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
+
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+    const [deleteTargetName, setDeleteTargetName] = useState('');
 
     const ghostCategories = Array.from(new Set(
         transactions
@@ -66,24 +75,28 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
         setEditingName('');
     };
 
-    const handleDelete = (id: string, name: string) => {
+    const handleDelete = (id: string | null, name: string) => {
         const usageCount = getCategoryUsageCount(name);
 
         if (usageCount > 0) {
-            toast.error(`Esta categoria está sendo usada em ${usageCount} transações`);
+            setDeleteTargetId(id);
+            setDeleteTargetName(name);
+            setDeleteModalOpen(true);
             return;
         }
 
-        toast(`Tem certeza que deseja deletar "${name}"?`, {
-            action: {
-                label: 'Confirmar Exclusão',
-                onClick: () => onDelete(id)
-            },
-            cancel: {
-                label: 'Cancelar',
-                onClick: () => { }
-            }
-        });
+        if (id) {
+            toast(`Tem certeza que deseja deletar "${name}"?`, {
+                action: {
+                    label: 'Confirmar Exclusão',
+                    onClick: () => onDelete(id)
+                },
+                cancel: {
+                    label: 'Cancelar',
+                    onClick: () => { }
+                }
+            });
+        }
     };
 
     return (
@@ -259,16 +272,25 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                                                     Usada em {usageCount} transações
                                                 </div>
                                             </div>
-                                            <button
-                                                onClick={() => {
-                                                    onAdd(catName, activeTab);
-                                                }}
-                                                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-                                                title="Adicionar à lista oficial"
-                                            >
-                                                <Plus className="w-4 h-4" />
-                                                Cadastrar Oficialmente
-                                            </button>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => handleDelete(null, catName)}
+                                                    className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                                    title="Deletar categoria (transações em uso)"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        onAdd(catName, activeTab);
+                                                    }}
+                                                    className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                                                    title="Adicionar à lista oficial"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                    Cadastrar Oficialmente
+                                                </button>
+                                            </div>
                                         </div>
                                     );
                                 })}
@@ -302,6 +324,25 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                     </button>
                 </div>
             </div>
+
+            <CategoryDeleteModal
+                isOpen={deleteModalOpen}
+                onClose={() => {
+                    setDeleteModalOpen(false);
+                    setDeleteTargetId(null);
+                    setDeleteTargetName('');
+                }}
+                categoryId={deleteTargetId}
+                categoryName={deleteTargetName}
+                usageCount={getCategoryUsageCount(deleteTargetName)}
+                availableCategories={categories.filter(c => c.type === activeTab)}
+                onReassign={(oldName, newName) => {
+                    onReassignAndDelete(deleteTargetId, oldName, newName);
+                }}
+                onDeleteAll={() => {
+                    onDeleteCascading(deleteTargetId, deleteTargetName);
+                }}
+            />
         </div>
     );
 };
