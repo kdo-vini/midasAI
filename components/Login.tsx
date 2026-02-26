@@ -90,9 +90,15 @@ export const Login: React.FC = () => {
                 }
 
                 if (data?.user) {
+                    const trialEndDate = new Date();
+                    trialEndDate.setDate(trialEndDate.getDate() + 7);
+
                     await supabase.from('user_profiles').upsert({
                         user_id: data.user.id,
                         display_name: displayName.trim(),
+                        subscription_status: 'trialing',
+                        trial_end_date: trialEndDate.toISOString(),
+                        has_seen_onboarding: false
                     }, { onConflict: 'user_id' });
                 }
 

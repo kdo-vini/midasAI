@@ -302,7 +302,35 @@ export const fetchUserProfile = async (userId: string) => {
 
     if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
 
-    if (!data) return null;
+    if (!data) {
+        // Create profile on-the-fly for new registrations if it doesn't exist yet
+        const trialDate = new Date();
+        trialDate.setDate(trialDate.getDate() + 7);
+        const newProfile = {
+            user_id: userId,
+            display_name: null,
+            subscription_status: 'trialing',
+            trial_end_date: trialDate.toISOString(),
+            has_seen_onboarding: false
+        };
+
+        const { error: insertError } = await supabase
+            .from('user_profiles')
+            .upsert([newProfile], { onConflict: 'user_id' });
+
+        if (insertError) {
+            console.error("Error creating new user profile:", insertError);
+            return null;
+        }
+
+        return {
+            userId: userId,
+            displayName: null,
+            subscriptionStatus: 'trialing',
+            trialEndDate: trialDate.toISOString(),
+            hasSeenOnboarding: false
+        } as UserProfile;
+    }
 
     return {
         userId: data.user_id,
@@ -318,11 +346,11 @@ export const fetchUserProfile = async (userId: string) => {
 export const saveUserProfile = async (profile: UserProfile) => {
     const { error } = await supabase
         .from('user_profiles')
-        .upsert([{
-            user_id: profile.userId,
+        .update({
             display_name: profile.displayName,
             has_seen_onboarding: profile.hasSeenOnboarding
-        }], { onConflict: 'user_id' });
+        })
+        .eq('user_id', profile.userId);
 
     if (error) throw error;
 };
