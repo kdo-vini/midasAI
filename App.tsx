@@ -685,8 +685,11 @@ const App: React.FC = () => {
 
   const isPro = useMemo(() => {
     if (!userProfile) return true; // default true while loading
-    if (userProfile.subscriptionStatus === 'active') return true;
-    if (userProfile.trialEndDate && new Date() < new Date(userProfile.trialEndDate)) return true;
+    if (userProfile.subscriptionStatus === 'active' || userProfile.subscriptionStatus === 'trialing') return true;
+    if (userProfile.trialEndDate) {
+      const trialDate = new Date(userProfile.trialEndDate);
+      if (trialDate.toString() !== 'Invalid Date' && new Date() < trialDate) return true;
+    }
     return false;
   }, [userProfile]);
 
