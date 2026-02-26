@@ -6,7 +6,7 @@ import Stripe from "https://esm.sh/stripe@14.14.0?target=deno";
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const PRICE_ID = 'price_1T4osWLUJWyE4PkYbnXWwzEo';
+const PRICE_ID = 'price_1T557wLUJWyE4PkYtnxpRgo2';
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
     apiVersion: '2023-10-16',
