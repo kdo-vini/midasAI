@@ -4,6 +4,30 @@ import { Loader2, Mail, Lock, ArrowLeft, CheckCircle, User } from 'lucide-react'
 import { toast, Toaster } from 'sonner';
 import { PrivacyPolicyModal } from './PrivacyPolicyModal';
 import { Logo } from './Logo';
+import zxcvbn from 'zxcvbn';
+
+const validatePassword = (pass: string) => {
+    if (pass.length < 8) {
+        return { isValid: false, message: 'A senha deve ter no mínimo 8 caracteres' };
+    }
+
+    const hasUpper = /[A-Z]/.test(pass);
+    const hasLower = /[a-z]/.test(pass);
+    const hasNumber = /[0-9]/.test(pass);
+    const hasSymbol = /[^A-Za-z0-9]/.test(pass);
+
+    const criteriaCount = [hasUpper, hasLower, hasNumber, hasSymbol].filter(Boolean).length;
+    if (criteriaCount < 3) {
+        return { isValid: false, message: 'A senha deve conter pelo menos 3 tipos: maiúscula, minúscula, número e símbolo' };
+    }
+
+    const result = zxcvbn(pass);
+    if (result.score < 3) {
+        return { isValid: false, message: 'Senha muito fácil de adivinhar. Evite sequências comuns e dados pessoais' };
+    }
+
+    return { isValid: true, message: '' };
+};
 
 export const Login: React.FC = () => {
     const [loading, setLoading] = useState(false);
@@ -30,6 +54,13 @@ export const Login: React.FC = () => {
 
                 if (!displayName.trim()) {
                     toast.error('Digite seu nome');
+                    setLoading(false);
+                    return;
+                }
+
+                const passwordCheck = validatePassword(password);
+                if (!passwordCheck.isValid) {
+                    toast.error(passwordCheck.message);
                     setLoading(false);
                     return;
                 }
