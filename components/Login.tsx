@@ -17,8 +17,8 @@ const validatePassword = (pass: string) => {
     const hasSymbol = /[^A-Za-z0-9]/.test(pass);
 
     const criteriaCount = [hasUpper, hasLower, hasNumber, hasSymbol].filter(Boolean).length;
-    if (criteriaCount < 3) {
-        return { isValid: false, message: 'A senha deve conter pelo menos 3 tipos: maiúscula, minúscula, número e símbolo' };
+    if (criteriaCount < 4) {
+        return { isValid: false, message: 'A senha deve conter: letras maiúsculas, minúsculas, números e símbolos especiais' };
     }
 
     const result = zxcvbn(pass);
@@ -71,12 +71,19 @@ export const Login: React.FC = () => {
                 });
 
                 if (error) {
-                    if (error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('user already registered')) {
+                    const errorMsg = error.message.toLowerCase();
+                    if (errorMsg.includes('already registered') || errorMsg.includes('user already registered')) {
                         toast.error('Este email já está cadastrado');
-                    } else if (error.message.toLowerCase().includes('password') && error.message.toLowerCase().includes('weak')) {
-                        toast.error('Senha muito fraca. Use pelo menos 6 caracteres');
+                    } else if (errorMsg.includes('password') || errorMsg.includes('senha')) {
+                        toast.error('Senha fraca. Certifique-se de usar pelo menos 8 caracteres com letras maiúsculas, minúsculas, números e símbolos.');
                     } else {
-                        toast.error(error.message);
+                        // Prevent leaking huge scary English database errors to the user
+                        if (error.message.length > 60) {
+                            toast.error('Não foi possível realizar o cadastro no momento. Tente novamente mais tarde.');
+                            console.error('Supabase raw error:', error.message);
+                        } else {
+                            toast.error(error.message);
+                        }
                     }
                     setLoading(false);
                     return;
