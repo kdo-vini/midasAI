@@ -13,6 +13,7 @@ import { InsightsComponent } from './components/InsightsComponent';
 import { BottomNav, TabType } from './components/BottomNav';
 import { Logo } from './components/Logo';
 import { FloatingChat } from './components/FloatingChat';
+import { OnboardingModal } from './components/OnboardingModal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { UpdatePassword } from './components/UpdatePassword';
 import { EmailConfirmed } from './components/EmailConfirmed';
@@ -1135,8 +1136,17 @@ const App: React.FC = () => {
         transactions={currentMonthTransactions}
         budgetGoals={budgetGoals}
         monthlyStats={stats}
-        startOnboarding={userProfile !== null && !userProfile.hasSeenOnboarding}
-        onOnboardingComplete={() => {
+      />
+
+      <OnboardingModal
+        isOpen={userProfile !== null && !userProfile.hasSeenOnboarding}
+        userProfile={userProfile}
+        categories={allCategories}
+        transactions={currentMonthTransactions}
+        budgetGoals={budgetGoals}
+        monthlyStats={stats}
+        onTransactionParsed={handleAITransaction}
+        onComplete={() => {
           if (userProfile && !userProfile.hasSeenOnboarding) {
             setUserProfile(prev => prev ? { ...prev, hasSeenOnboarding: true } : null);
             supabase.from('user_profiles').update({ has_seen_onboarding: true }).eq('user_id', userProfile.userId).then();

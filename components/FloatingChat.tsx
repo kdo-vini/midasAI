@@ -9,8 +9,6 @@ interface FloatingChatProps {
     transactions: Transaction[];
     budgetGoals: BudgetGoal[];
     monthlyStats: MonthlyStats;
-    startOnboarding?: boolean;
-    onOnboardingComplete?: () => void;
 }
 
 interface Message {
@@ -18,32 +16,12 @@ interface Message {
     content: string;
 }
 
-export const FloatingChat: React.FC<FloatingChatProps> = ({ transactions, budgetGoals, monthlyStats, startOnboarding, onOnboardingComplete }) => {
+export const FloatingChat: React.FC<FloatingChatProps> = ({ transactions, budgetGoals, monthlyStats }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const onboardingTriggered = useRef(false);
-
-    useEffect(() => {
-        if (startOnboarding && !onboardingTriggered.current) {
-            onboardingTriggered.current = true;
-            setIsOpen(true);
-            setMessages([
-                {
-                    role: 'assistant',
-                    content: 'Olá! Sou o **Midas**, sua IA financeira pessoal. Parabéns por dar o primeiro passo para organizar suas finanças!\n\nEstou aqui para analisar seus gastos reais, categorizar tudo de forma automática, ler os extratos que você enviar e tirar qualquer dúvida sua.\n\nO que acha de começarmos adicionando sua primeira transação financeira?'
-                }
-            ]);
-        }
-    }, [startOnboarding]);
-
-    const completeOnboarding = () => {
-        if (startOnboarding && onOnboardingComplete) {
-            onOnboardingComplete();
-        }
-    };
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -61,7 +39,6 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({ transactions, budget
         setInput('');
         setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
         setIsLoading(true);
-        completeOnboarding();
 
         try {
             const apiHistory = messages.map(m => ({ role: m.role, content: m.content }));
@@ -106,7 +83,6 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({ transactions, budget
                         <button
                             onClick={() => {
                                 setIsOpen(false);
-                                completeOnboarding();
                             }}
                             className="text-slate-500 hover:text-slate-300 transition-colors p-1"
                         >
