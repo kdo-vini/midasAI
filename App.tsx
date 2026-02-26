@@ -1132,6 +1132,13 @@ const App: React.FC = () => {
         transactions={currentMonthTransactions}
         budgetGoals={budgetGoals}
         monthlyStats={stats}
+        startOnboarding={userProfile !== null && !userProfile.hasSeenOnboarding}
+        onOnboardingComplete={() => {
+          if (userProfile && !userProfile.hasSeenOnboarding) {
+            setUserProfile(prev => prev ? { ...prev, hasSeenOnboarding: true } : null);
+            supabase.from('user_profiles').update({ has_seen_onboarding: true }).eq('user_id', userProfile.userId).then();
+          }
+        }}
       />
 
       {/* Delete Confirmation Modal for Installments */}

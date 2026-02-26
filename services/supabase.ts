@@ -310,7 +310,8 @@ export const fetchUserProfile = async (userId: string) => {
         stripeCustomerId: data.stripe_customer_id,
         stripeSubscriptionId: data.stripe_subscription_id,
         subscriptionStatus: data.subscription_status,
-        trialEndDate: data.trial_end_date
+        trialEndDate: data.trial_end_date,
+        hasSeenOnboarding: data.has_seen_onboarding
     } as UserProfile;
 };
 
@@ -319,8 +320,18 @@ export const saveUserProfile = async (profile: UserProfile) => {
         .from('user_profiles')
         .upsert([{
             user_id: profile.userId,
-            display_name: profile.displayName
+            display_name: profile.displayName,
+            has_seen_onboarding: profile.hasSeenOnboarding
         }], { onConflict: 'user_id' });
+
+    if (error) throw error;
+};
+
+export const markOnboardingSeen = async (userId: string) => {
+    const { error } = await supabase
+        .from('user_profiles')
+        .update({ has_seen_onboarding: true })
+        .eq('user_id', userId);
 
     if (error) throw error;
 };

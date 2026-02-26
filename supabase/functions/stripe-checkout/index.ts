@@ -6,7 +6,7 @@ import Stripe from "https://esm.sh/stripe@14.14.0?target=deno";
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const PRICE_ID = 'price_1SqI7LLUJWyE4PkYu6pYG9Tw';
+const PRICE_ID = 'price_1T4osWLUJWyE4PkYbnXWwzEo';
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
     apiVersion: '2023-10-16',
@@ -45,7 +45,7 @@ serve(async (req) => {
             customerId = customer.id;
         }
 
-        // Create checkout session with 7-day trial
+        // Create checkout session
         const session = await stripe.checkout.sessions.create({
             customer: customerId,
             payment_method_types: ['card'],
@@ -54,9 +54,6 @@ serve(async (req) => {
                 quantity: 1,
             }],
             mode: 'subscription',
-            subscription_data: {
-                trial_period_days: 7,
-            },
             success_url: `${returnUrl}?success=true`,
             cancel_url: `${returnUrl}?canceled=true`,
             metadata: {
