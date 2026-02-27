@@ -89,6 +89,15 @@ export const Login: React.FC = () => {
                     return;
                 }
 
+                // Caso especial Supabase: usuário já existe e está confirmado.
+                // Nessa situação o signUp pode retornar user sem erro, mas com identities vazio,
+                // e nenhum email é enviado novamente.
+                if (data?.user && Array.isArray((data as any).user?.identities) && (data as any).user.identities.length === 0) {
+                    toast.error('Este email já está cadastrado. Faça login com sua senha.');
+                    setLoading(false);
+                    return;
+                }
+
                 if (data?.user) {
                     const trialEndDate = new Date();
                     trialEndDate.setDate(trialEndDate.getDate() + 7);

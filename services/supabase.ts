@@ -323,16 +323,17 @@ export const fetchUserProfile = async (userId: string) => {
             return null;
         }
 
-        return {
+        const createdProfile: UserProfile = {
             userId: userId,
             displayName: null,
             subscriptionStatus: 'trialing',
             trialEndDate: trialDate.toISOString(),
             hasSeenOnboarding: false
-        } as UserProfile;
+        };
+        return createdProfile;
     }
 
-    return {
+    const loadedProfile: UserProfile = {
         userId: data.user_id,
         displayName: data.display_name,
         stripeCustomerId: data.stripe_customer_id,
@@ -340,7 +341,8 @@ export const fetchUserProfile = async (userId: string) => {
         subscriptionStatus: data.subscription_status,
         trialEndDate: data.trial_end_date,
         hasSeenOnboarding: data.has_seen_onboarding
-    } as UserProfile;
+    };
+    return loadedProfile;
 };
 
 export const saveUserProfile = async (profile: UserProfile) => {
