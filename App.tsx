@@ -33,7 +33,7 @@ const App: React.FC = () => {
 
   const [session, setSession] = useState<any>(null);
   const [loadingSession, setLoadingSession] = useState(true);
-  const [view, setView] = useState<'landing' | 'login' | 'app' | 'update-password' | 'email-confirmed'>(() => {
+  const [view, setView] = useState<'landing' | 'login' | 'signup' | 'app' | 'update-password' | 'email-confirmed'>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
       if (hash.includes('type=recovery')) return 'update-password';
@@ -1007,12 +1007,12 @@ const App: React.FC = () => {
 
   if (!session) {
     if (view === 'landing') {
-      return <LandingPage onLoginClick={() => setView('login')} />;
+      return <LandingPage onLoginClick={() => setView('login')} onSignupClick={() => setView('signup')} />;
     }
     // Simple Login Wrapper with Back Button
     return (
       <div className="relative">
-        <Login />
+        <Login initialIsSignUp={view === 'signup'} />
         <button
           onClick={() => setView('landing')}
           className="absolute top-4 left-4 p-2 bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors"

@@ -4,9 +4,10 @@ import { Logo } from './Logo';
 
 interface LandingPageProps {
     onLoginClick: () => void;
+    onSignupClick: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick, onSignupClick }) => {
     const [messages, setMessages] = useState<{ text: string; type: 'user' | 'ai'; html?: boolean }[]>([]);
     const cursorGlowRef = useRef<HTMLDivElement>(null);
     const cursorDotRef = useRef<HTMLDivElement>(null);
@@ -260,7 +261,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     </ul>
 
                     <button
-                        onClick={onLoginClick}
+                        onClick={onSignupClick}
                         style={{
                             width: '100%',
                             padding: '14px',
@@ -282,7 +283,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             <footer className="landing-footer">
                 <h2 style={{ marginBottom: '2rem' }}>Comece a usar o Midas.</h2>
                 <button
-                    onClick={onLoginClick}
+                    onClick={onSignupClick}
                     style={{
                         padding: '15px 40px',
                         background: 'var(--gold-primary)',

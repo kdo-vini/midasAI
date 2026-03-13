@@ -29,13 +29,17 @@ const validatePassword = (pass: string) => {
     return { isValid: true, message: '' };
 };
 
-export const Login: React.FC = () => {
+interface LoginProps {
+    initialIsSignUp?: boolean;
+}
+
+export const Login: React.FC<LoginProps> = ({ initialIsSignUp = false }) => {
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [displayName, setDisplayName] = useState('');
-    const [isSignUp, setIsSignUp] = useState(false);
+    const [isSignUp, setIsSignUp] = useState(initialIsSignUp);
     const [showPrivacy, setShowPrivacy] = useState(false);
     const [showForgotPassword, setShowForgotPassword] = useState(false);
     const [showEmailSent, setShowEmailSent] = useState<'signup' | 'reset' | null>(null);
