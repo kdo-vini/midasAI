@@ -587,6 +587,11 @@ const App: React.FC = () => {
   // --- Subscription Management ---
   const handleManageSubscription = async () => {
     if (!session?.user) return;
+
+    if (!userProfile?.stripeCustomerId) {
+      return handleUpgradeSubscription();
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke('stripe-portal', {
         body: { userId: session.user.id, returnUrl: window.location.origin }

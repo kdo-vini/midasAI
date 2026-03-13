@@ -19,8 +19,8 @@ serve(async (req) => {
         }
 
         const MODEL_PARSE   = "gpt-5-nano";  // rápido, barato — tarefa simples
-        const MODEL_INSIGHT = "gpt-5-nano";  // rápido, barato — 2 frases
-        const MODEL_CHAT    = "gpt-5-mini";  // GPT-5, inteligente — coach financeiro
+        const MODEL_INSIGHT = "gpt-5-mini";  // melhor raciocínio — análise de padrões
+        const MODEL_CHAT    = "gpt-5-mini";  // near-frontier, inteligente — coach financeiro
         let messages = [];
         let responseFormat = null;
         const targetLang = language === 'en' ? 'English' : 'Portuguese';
@@ -260,7 +260,7 @@ serve(async (req) => {
             { headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
 
-    } catch (error) {
+    } catch (error: any) {
         return new Response(
             JSON.stringify({ error: error.message }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },

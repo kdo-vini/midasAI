@@ -1,7 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(wc -l App.tsx services/*.ts components/*.tsx)"
+      "Bash(wc -l App.tsx services/*.ts components/*.tsx)",
+      "WebFetch(domain:openai.com)",
+      "WebFetch(domain:pricepertoken.com)",
+      "WebFetch(domain:platform.openai.com)",
+      "WebFetch(domain:developers.openai.com)",
+      "mcp__b66dc66d-f2ed-435c-934d-a473e8b38636__list_projects",
+      "Bash(npx supabase functions deploy ai-proxy --project-ref gowbosupufxyulkyffmv)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(git add supabase/functions/ai-proxy/index.ts)",
+      "Bash(git commit:*)",
+      "Bash(git push origin main)",
+      "WebSearch",
+      "Skill(commit-commands:commit)"
     ]
   }
 }
