@@ -301,6 +301,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick, onSignup
                 <div className="techne-badge">
                     Desenvolvido pela <a href="https://techneia.com.br" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold-primary)', textDecoration: 'underline' }}>Téchne Sistemas</a>
                 </div>
+                <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', lineHeight: '1.5' }}>
+                    Techne Sistemas Tecnologia Da Informacao Ltda — CNPJ: 65.679.798/0001-95<br />
+                    Promissão, SP — Brasil
+                </div>
             </footer>
         </div>
     );

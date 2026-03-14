@@ -83,6 +83,11 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen, 
 
                     <section className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
                         <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2">Contato</h3>
+                        <p className="mb-2">
+                            <strong>Techne Sistemas Tecnologia Da Informacao Ltda</strong><br />
+                            CNPJ: 65.679.798/0001-95<br />
+                            Promissão, SP — Brasil
+                        </p>
                         <p>Dúvidas? Entre em contato:</p>
                         <ul className="mt-2 space-y-1">
                             <li>📧 techne.br@gmail.com</li>

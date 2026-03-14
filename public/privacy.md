@@ -61,6 +61,10 @@ Podemos atualizar nossa Política de Privacidade periodicamente. Notificaremos v
 
 ## 7. Contato
 
+**Techne Sistemas Tecnologia Da Informacao Ltda**
+CNPJ: 65.679.798/0001-95
+Promissão, SP — Brasil
+
 Se tiver dúvidas sobre esta Política de Privacidade, entre em contato conosco:
 - **E-mail:** techne.br@gmail.com
 - **Telefone/WhatsApp:** (14) 99153-7503
