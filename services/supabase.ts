@@ -294,13 +294,20 @@ export const deleteUserCategory = async (id: string) => {
 // --- User Profile Functions ---
 
 export const fetchUserProfile = async (userId: string) => {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError) throw userError;
+    if (!user || user.id !== userId) {
+        throw new Error('Cannot access a profile without its authenticated user session');
+    }
+
     const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+    if (error) throw error;
 
     if (!data) {
         // Create profile on-the-fly for new registrations if it doesn't exist yet
@@ -308,7 +315,9 @@ export const fetchUserProfile = async (userId: string) => {
         trialDate.setDate(trialDate.getDate() + 7);
         const newProfile = {
             user_id: userId,
-            display_name: null,
+            display_name: typeof user.user_metadata?.display_name === 'string'
+                ? user.user_metadata.display_name
+                : null,
             subscription_status: 'trialing',
             trial_end_date: trialDate.toISOString(),
             has_seen_onboarding: false
@@ -325,7 +334,7 @@ export const fetchUserProfile = async (userId: string) => {
 
         const createdProfile: UserProfile = {
             userId: userId,
-            displayName: null,
+            displayName: newProfile.display_name,
             subscriptionStatus: 'trialing',
             trialEndDate: trialDate.toISOString(),
             hasSeenOnboarding: false

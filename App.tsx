@@ -143,7 +143,7 @@ const App: React.FC = () => {
       // Check push notification status
       isSubscribedToPush().then(setPushEnabled);
     }
-  }, [session]);
+  }, [session?.user.id]);
 
   const loadData = async (userId: string) => {
     setIsLoadingData(true);

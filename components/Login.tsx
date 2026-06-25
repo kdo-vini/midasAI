@@ -72,6 +72,11 @@ export const Login: React.FC<LoginProps> = ({ initialIsSignUp = false }) => {
                 const { data, error } = await supabase.auth.signUp({
                     email,
                     password,
+                    options: {
+                        data: {
+                            display_name: displayName.trim()
+                        }
+                    }
                 });
 
                 if (error) {
@@ -102,17 +107,24 @@ export const Login: React.FC<LoginProps> = ({ initialIsSignUp = false }) => {
                     return;
                 }
 
-                if (data?.user) {
+                // With email confirmation enabled, signUp returns a user but no
+                // authenticated session. Inserting here would therefore be an
+                // anonymous request and must be rejected by RLS.
+                if (data?.user && data.session) {
                     const trialEndDate = new Date();
                     trialEndDate.setDate(trialEndDate.getDate() + 7);
 
-                    await supabase.from('user_profiles').upsert({
+                    const { error: profileError } = await supabase.from('user_profiles').upsert({
                         user_id: data.user.id,
                         display_name: displayName.trim(),
                         subscription_status: 'trialing',
                         trial_end_date: trialEndDate.toISOString(),
                         has_seen_onboarding: false
                     }, { onConflict: 'user_id' });
+
+                    if (profileError) {
+                        console.error('Error creating authenticated user profile:', profileError);
+                    }
                 }
 
                 setShowEmailSent('signup');
